@@ -11,14 +11,23 @@ I'm continuing work on project-context-file-maker — the interactive interview 
 that builds AI context files for users.
 
 This project implements PA2.3 from the Setness Consulting business plan.
-Current phase: v0.1 — free tier (about_me.md + ai_preferences.md).
+Current phase: v0.1.1 — free tier (about_me.md + ai_preferences.md) with full test suite and tooling.
 
 Read SOUL.md, AGENTS.md, HANDOFF.md, STATUS.md, JOBS_TO_BE_DONE.md,
-ARCHITECTURE.md, and PRD.md.
+ARCHITECTURE.md, PRD.md, and CONTRIBUTING.md.
 
 The agent system prompt lives in agents/context-file-maker-agent.md.
 Output templates are in templates/free/.
 Full question banks are in docs/questionnaires/.
+
+Tooling:
+- scripts/template_engine.py — Mustache-style template filling
+- scripts/validate.py — Syntax + placeholder-field validation
+- scripts/generate.py — CLI: JSON answers → markdown files
+
+Testing:
+- Run: python -m pytest tests/ -v  (78 tests)
+- Run validation: python scripts/validate.py --strict
 
 The paid tier catalog exists in templates/paid/CATALOG.md but implementation
 is deferred to future batches.

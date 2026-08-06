@@ -17,7 +17,14 @@ credentials/
 *.swp
 *.swo
 
-# Build
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
 dist/
+
+# Build
 .next/
 out/

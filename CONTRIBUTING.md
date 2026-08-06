@@ -1,0 +1,76 @@
+# Contributing to Context File Maker
+
+Thanks for contributing. This project follows the same conventions as all Setness Cursor projects.
+
+## Phase 1a Document Standards
+
+Every change should keep these 7 root documents current:
+- `README.md` — Quick start and project map
+- `SOUL.md` — Identity and operating contract
+- `AGENTS.md` — Agent guidance
+- `HANDOFF.md` — Session handoff
+- `STATUS.md` — Current state and open items
+- `JOBS_TO_BE_DONE.md` — Operating scorecard
+- `ARCHITECTURE.md` — System design
+
+## Development Setup
+
+```bash
+# Clone the repo
+git clone https://github.com/andrewsetness/project-context-file-maker.git
+
+# Install test dependencies
+pip install pytest jsonschema
+
+# Run tests
+python -m pytest tests/ -v
+
+# Run validation
+python scripts/validate.py
+
+# Run validation with examples check
+python scripts/validate.py --strict
+```
+
+## Code Conventions
+
+- Python: Follow PEP 8. Use type hints where practical.
+- Markdown: Standard markdown. Templates use Mustache-like `{{field}}` syntax.
+- Commits: Conventional Commits format (`feat:`, `fix:`, `docs:`, `test:`, `chore:`)
+
+## Adding New Templates
+
+1. Create the template in `templates/free/` or `templates/paid/`
+2. Create the question bank in `docs/questionnaires/`
+3. Add a JSON schema in `schemas/`
+4. Add test fixtures in `tests/fixtures/`
+5. Add tests in `tests/`
+6. Update `templates/paid/CATALOG.md` if paid
+7. Run `python scripts/validate.py --strict`
+8. Run `python -m pytest tests/ -v`
+
+## Running the Test Suite
+
+```bash
+# All tests
+python -m pytest tests/ -v
+
+# Template engine tests only
+python -m pytest tests/test_template_engine.py -v
+
+# Validation tests only
+python -m pytest tests/test_validation.py -v
+
+# Integration tests only
+python -m pytest tests/test_integration.py -v
+```
+
+## Validation
+
+Before committing, always run:
+```bash
+python scripts/validate.py --strict
+python -m pytest tests/ -v
+```
+
+Both must pass. The validator checks template syntax and placeholder-field mapping. The test suite covers template engine correctness, validation logic, and end-to-end generation.

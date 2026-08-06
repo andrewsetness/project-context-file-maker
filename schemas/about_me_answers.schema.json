@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "about_me.md Answer Schema",
+  "description": "All possible answer fields for the about_me.md interview.",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "description": "Full name for the about_me section"
+    },
+    "preferred_name": {
+      "type": "string",
+      "description": "Nickname or short form (optional)"
+    },
+    "job_title": {
+      "type": "string",
+      "description": "Current job title"
+    },
+    "company": {
+      "type": "string",
+      "description": "Company or organization name"
+    },
+    "company_size": {
+      "type": "string",
+      "description": "Approximate company size"
+    },
+    "industry": {
+      "type": "string",
+      "description": "Industry vertical"
+    },
+    "years_experience": {
+      "type": "string",
+      "description": "Years of professional experience"
+    },
+    "location": {
+      "type": "string",
+      "description": "City and/or timezone"
+    },
+    "primary_work": {
+      "type": "string",
+      "description": "Day-to-day work description (2-3 sentences)"
+    },
+    "current_projects": {
+      "type": "string",
+      "description": "Current projects as a bullet list or text"
+    },
+    "biggest_challenge": {
+      "type": "string",
+      "description": "Hardest part of current work"
+    },
+    "goals_6mo": {
+      "type": "string",
+      "description": "6-month goals"
+    },
+    "goals_2yr": {
+      "type": "string",
+      "description": "2-year goals"
+    },
+    "tech_stack": {
+      "type": "string",
+      "description": "Programming languages, frameworks, tools"
+    },
+    "ai_tools": {
+      "type": "string",
+      "description": "AI tools currently used"
+    },
+    "ai_proficiency": {
+      "type": "string",
+      "description": "AI proficiency level (beginner/intermediate/advanced)"
+    },
+    "ai_pain_points": {
+      "type": "string",
+      "description": "What frustrates you about current AI tools (optional)"
+    },
+    "favorite_tools": {
+      "type": "string",
+      "description": "Tools you love and why (optional)"
+    },
+    "tools_avoid": {
+      "type": "string",
+      "description": "Tools you've tried and disliked (optional)"
+    },
+    "communication_style": {
+      "type": "string",
+      "description": "Preferred communication style"
+    },
+    "learning_style": {
+      "type": "string",
+      "description": "Preferred learning style"
+    },
+    "work_hours": {
+      "type": "string",
+      "description": "Typical work hours"
+    },
+    "hobbies": {
+      "type": "string",
+      "description": "Hobbies and interests (optional)"
+    },
+    "fun_fact": {
+      "type": "string",
+      "description": "One interesting fact (optional)"
+    }
+  },
+  "required": ["full_name", "job_title", "primary_work", "biggest_challenge"]
+}

@@ -1,0 +1,6 @@
+{
+  "tone": "Casual",
+  "verbosity": "Concise",
+  "test_policy": "When requested",
+  "secrets_policy": "Use env vars"
+}
