@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+.env
+.env.local
+*.log
+.DS_Store
+Thumbs.db
+
+# Secrets
+secrets/
+*.pem
+*.key
+credentials/
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Build
+dist/
+.next/
+out/
