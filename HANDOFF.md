@@ -1,5 +1,7 @@
 # Context File Maker — Handoff
 
+# Context File Maker — Handoff
+
 **Repo:** `andrewsetness/project-context-file-maker`  
 **Current state:** `STATUS.md`  
 **Canonical sources:** `README.md` (map) and `docs/DATA-CONTRACT.md` (input/output)
