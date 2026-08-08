@@ -40,3 +40,9 @@ Free tier: 2 files (`about_me.md`, `ai_preferences.md`) — no email gate, no st
 Paid tier (future): 60+ files across 14 categories, cataloged in `templates/paid/CATALOG.md`.
 
 Commercial planning that lives outside this repository is optional context for the owner. It is not required to clone, understand, or validate the product.
+
+## Agent Behavior
+
+- Think before coding: surface assumptions when interview behavior is ambiguous; never invent product decisions (free tier first, see Core Mandate).
+- Surgical changes: output must stay template-driven — change templates only when the task requires (see Core Mandate).
+- Verify before claiming done: run the interview flow and show the generated files before declaring completion.
