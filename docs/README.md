@@ -43,3 +43,12 @@ This repository is self-contained. Start with the canonical-source table in `../
 |------|------|---------|
 | about_me Example | `../output-examples/about_me_example.md` | Example generated about_me.md |
 | ai_preferences Example | `../output-examples/ai_preferences_example.md` | Example generated ai_preferences.md |
+
+## Tooling
+
+| Tool | Path | Purpose |
+|------|------|---------|
+| Template Engine | `../scripts/template_engine.py` | Mustache-style template filling (`{{field}}`, `{{~field}}`, `{{#field}}`, `{{#any:...}}`) |
+| Validator | `../scripts/validate.py` | Template/question-bank consistency checks |
+| CLI Generator | `../scripts/generate.py` | JSON answers → markdown context files |
+| Answer Schemas | `../schemas/` | JSON schema validation for answer payloads |

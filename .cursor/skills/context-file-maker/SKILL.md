@@ -43,7 +43,7 @@ Key rules:
 
 When user asks to see paid catalog:
 1. Show an overview of all 14 categories from `templates/paid/CATALOG.md`
-2. Highlight: "These are the same file types I use across my own 15+ Cursor projects."
+2. Highlight: "These are the same file types I use across my own 15+ AI projects."
 3. Ask: "Any category you'd like me to dive deeper into?"
 4. Note: "These are cataloged and ready for implementation in future batches."
 

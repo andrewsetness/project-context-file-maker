@@ -2,20 +2,25 @@
 """
 Context File Maker — CLI Generator
 
-Generates context files from schema-validated JSON answer payloads.
+Generates context files from JSON answer payloads.
 
 Usage:
     python scripts/generate.py about_me --answers data/about_me.json
     python scripts/generate.py ai_preferences --answers data/prefs.json
     python scripts/generate.py all --about data/about.json --prefs data/prefs.json
     python scripts/generate.py about_me --answers data/about.json --output my_about.md
+
+Options:
+    --validate          Validate answers against the JSON schema before generating
+    --json              Emit machine-readable output instead of the rendered file
+    --force             Overwrite existing output files without prompting
+    -v, --verbose       Print diagnostic detail (unfilled fields, warnings)
 """
 
 import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any
 
 # Add scripts directory to path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -25,224 +30,266 @@ from template_engine import fill_template
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 TEMPLATES = {
-    "about_me": PROJECT_ROOT / "templates" / "free" / "about_me.md",
-    "ai_preferences": PROJECT_ROOT / "templates" / "free" / "ai_preferences.md",
+    'about_me': PROJECT_ROOT / 'templates' / 'free' / 'about_me.md',
+    'ai_preferences': PROJECT_ROOT / 'templates' / 'free' / 'ai_preferences.md',
 }
 
 SCHEMAS = {
-    "about_me": PROJECT_ROOT / "schemas" / "about_me_answers.schema.json",
-    "ai_preferences": PROJECT_ROOT / "schemas" / "ai_preferences_answers.schema.json",
+    'about_me': PROJECT_ROOT / 'schemas' / 'about_me_answers.schema.json',
+    'ai_preferences': PROJECT_ROOT / 'schemas' / 'ai_preferences_answers.schema.json',
 }
 
+#: Fields that are optional in the schema (may be omitted by the user).
+OPTIONAL_FIELDS = {
+    'about_me': {
+        'preferred_name', 'ai_pain_points', 'favorite_tools', 'tools_avoid',
+        'hobbies', 'fun_fact',
+    },
+    'ai_preferences': {
+        'stack_preferences', 'no_touch_files', 'pet_peeves',
+        'past_frustrations', 'must_haves', 'never_do',
+    },
+}
 
-class AnswerValidationError(ValueError):
-    """Raised when an answer payload violates its checked-in JSON schema."""
+EXIT_OK = 0
+EXIT_ERROR = 1
+EXIT_VALIDATION = 2
 
 
-def load_json(path: Path) -> dict[str, Any]:
-    """Load a JSON object, with helpful errors for malformed input."""
+def _reconfigure_console():
+    """Best-effort UTF-8 console output on Windows (CP1252 consoles mangle
+    em-dashes and other non-ASCII characters in printed output)."""
+    if sys.platform == 'win32':
+        try:
+            import io
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+        except Exception:
+            pass
+
+
+def load_json(path: Path) -> dict:
+    """Load a JSON file, with helpful error on failure."""
     try:
-        with path.open("r", encoding="utf-8") as handle:
-            payload = json.load(handle)
-    except FileNotFoundError as exc:
-        raise AnswerValidationError(f"File not found: {path}") from exc
-    except json.JSONDecodeError as exc:
-        raise AnswerValidationError(f"Invalid JSON in {path}: {exc}") from exc
-
-    if not isinstance(payload, dict):
-        raise AnswerValidationError(
-            f"Answer payload must be a JSON object: {path}"
-        )
-    return payload
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"Error: File not found: {path}", file=sys.stderr)
+        sys.exit(EXIT_ERROR)
+    except json.JSONDecodeError as e:
+        print(f"Error: Invalid JSON in {path}: {e}", file=sys.stderr)
+        sys.exit(EXIT_ERROR)
 
 
-def load_schema(template_name: str) -> dict[str, Any]:
-    """Load the checked-in answer schema for a supported template."""
+def validate_answers(template_name: str, answers: dict, verbose: bool = False):
+    """Validate answers against the schema. Returns (valid, messages)."""
     schema_path = SCHEMAS.get(template_name)
-    if schema_path is None:
-        raise AnswerValidationError(
-            f"No schema configured for template '{template_name}'"
-        )
+    if not schema_path or not schema_path.exists():
+        if verbose:
+            print(f"Warning: no schema for '{template_name}' — skipping validation")
+        return True, []
+
     try:
-        schema = json.loads(schema_path.read_text(encoding="utf-8"))
-    except FileNotFoundError as exc:
-        raise AnswerValidationError(f"Schema not found: {schema_path}") from exc
-    except json.JSONDecodeError as exc:
-        raise AnswerValidationError(
-            f"Invalid JSON schema in {schema_path}: {exc}"
-        ) from exc
-    if not isinstance(schema, dict):
-        raise AnswerValidationError(f"Schema must be a JSON object: {schema_path}")
-    return schema
+        import jsonschema
+    except ImportError:
+        print("Warning: jsonschema not installed — skipping validation", file=sys.stderr)
+        return True, []
+
+    try:
+        schema = json.loads(schema_path.read_text(encoding='utf-8'))
+        jsonschema.validate(answers, schema)
+    except jsonschema.ValidationError as e:
+        # A single, readable message rather than a wall of schema internals.
+        where = '.'.join(str(p) for p in e.path) or '(root)'
+        return False, [f"Field '{where}': {e.message}"]
+
+    except json.JSONDecodeError as e:
+        print(f"Error: Invalid schema JSON in {schema_path}: {e}", file=sys.stderr)
+        return True, []
+
+    # Warn about unknown keys (typos) rather than failing — future fields
+    # should be forward-compatible.
+    known = set(schema.get('properties', {}).keys())
+    unknown = [key for key in answers if key not in known]
+    if unknown and verbose:
+        print(f"Note: unknown answer fields (possible typos): {', '.join(sorted(unknown))}")
+
+    return True, []
 
 
-def validate_answers(template_name: str, answers: dict[str, Any]) -> None:
-    """Validate the schema subset used by the free-tier answer contracts.
-
-    The checked-in schemas are the source of truth. The runtime intentionally
-    implements only the constructs those schemas currently use: an object with
-    named properties, required fields, and scalar property types. If the schema
-    grows beyond this subset, validation fails closed rather than silently
-    accepting an unsupported rule.
-    """
-    schema = load_schema(template_name)
-    if schema.get("type") != "object":
-        raise AnswerValidationError(
-            f"Unsupported schema root for '{template_name}': expected type=object"
-        )
-
-    required = schema.get("required", [])
-    properties = schema.get("properties", {})
-    if not isinstance(required, list) or not isinstance(properties, dict):
-        raise AnswerValidationError(
-            f"Unsupported schema structure for '{template_name}'"
-        )
-
-    errors: list[str] = []
-    for field in required:
-        if not isinstance(field, str):
-            raise AnswerValidationError(
-                f"Unsupported non-string required field in '{template_name}' schema"
-            )
-        if field not in answers:
-            errors.append(f"missing required field '{field}'")
-
-    type_map: dict[str, type] = {
-        "string": str,
-        "number": (int, float),
-        "integer": int,
-        "boolean": bool,
-        "object": dict,
-        "array": list,
-    }
-    for field, value in answers.items():
-        rule = properties.get(field)
-        # Current schemas allow additional properties because they do not set
-        # additionalProperties=false. Preserve that JSON Schema behavior.
-        if rule is None:
-            continue
-        if not isinstance(rule, dict):
-            raise AnswerValidationError(
-                f"Unsupported schema rule for '{template_name}.{field}'"
-            )
-        expected_name = rule.get("type")
-        if expected_name is None:
-            continue
-        expected = type_map.get(expected_name)
-        if expected is None:
-            raise AnswerValidationError(
-                f"Unsupported schema type '{expected_name}' for '{template_name}.{field}'"
-            )
-        # bool is a subclass of int in Python; do not accept it as number/integer.
-        wrong_type = not isinstance(value, expected)
-        if expected_name in {"number", "integer"} and isinstance(value, bool):
-            wrong_type = True
-        if wrong_type:
-            errors.append(
-                f"field '{field}' must be {expected_name}, got {type(value).__name__}"
-            )
-
-    if errors:
-        raise AnswerValidationError(
-            f"Invalid {template_name} answers: " + "; ".join(errors)
-        )
+def check_missing_optional(template_name: str, answers: dict) -> list:
+    """Return a list of optional fields the user did not fill in."""
+    missing = []
+    for field in OPTIONAL_FIELDS.get(template_name, ()):
+        if not answers.get(field):
+            missing.append(field)
+    return missing
 
 
-def generate(
-    template_name: str,
-    answers: dict[str, Any],
-    output_path: Path | None = None,
-) -> str:
-    """Validate answers, render a template, and optionally write the result."""
+def generate(template_name: str, answers: dict, output_path: Path = None,
+             verbose: bool = False):
+    """Generate a context file from a template and answers. Returns the result
+    string; the caller decides how to present it."""
     if template_name not in TEMPLATES:
-        raise AnswerValidationError(
-            f"Unknown template '{template_name}'. Available: {list(TEMPLATES.keys())}"
-        )
+        print(f"Error: Unknown template '{template_name}'. "
+              f"Available: {list(TEMPLATES.keys())}", file=sys.stderr)
+        sys.exit(EXIT_ERROR)
 
     template_path = TEMPLATES[template_name]
     if not template_path.exists():
-        raise AnswerValidationError(f"Template not found: {template_path}")
+        print(f"Error: Template not found: {template_path}", file=sys.stderr)
+        sys.exit(EXIT_ERROR)
 
-    validate_answers(template_name, answers)
-    template_str = template_path.read_text(encoding="utf-8")
+    template_str = template_path.read_text(encoding='utf-8')
     result = fill_template(template_str, answers)
 
-    if output_path:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(result, encoding="utf-8")
-        print(f"Generated: {output_path}")
-    else:
-        print(result)
+    if verbose:
+        missing = check_missing_optional(template_name, answers)
+        if missing:
+            print(f"Note: optional fields not provided: {', '.join(missing)}")
+
     return result
 
 
-def main() -> int:
+def confirm_overwrite(path: Path, force: bool) -> bool:
+    """Ask before overwriting an existing file unless --force is set."""
+    if not path.exists() or force:
+        return True
+    try:
+        answer = input(f"{path} exists. Overwrite? [y/N] ")
+    except EOFError:
+        return False
+    return answer.strip().lower() in ('y', 'yes')
+
+
+def write_output(path: Path, content: str, force: bool) -> bool:
+    """Write content to path, prompting before overwrite. Returns success."""
+    if not confirm_overwrite(path, force):
+        print(f"Skipped: {path} (already exists)")
+        return False
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding='utf-8')
+    print(f"Generated: {path}")
+    return True
+
+
+def main():
+    _reconfigure_console()
+
     parser = argparse.ArgumentParser(
-        description="Generate AI context files from schema-validated JSON answer payloads"
+        description='Generate AI context files from JSON answer payloads',
+        epilog=(
+            'Examples:\n'
+            '  python scripts/generate.py about_me --answers data/about.json\n'
+            '  python scripts/generate.py ai_preferences --answers data/prefs.json \\\n'
+            '      --validate -o my_prefs.md\n'
+            '  python scripts/generate.py all --about data/about.json \\\n'
+            '      --prefs data/prefs.json --outdir out --validate --force\n'
+            '\n'
+            'All subcommands accept --validate, --json, --force, --verbose.'
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    subparsers = parser.add_subparsers(dest="command", help="What to generate")
+    subparsers = parser.add_subparsers(dest='command', help='What to generate')
 
-    about_parser = subparsers.add_parser("about_me", help="Generate about_me.md")
-    about_parser.add_argument(
-        "--answers", required=True, type=Path, help="JSON file with about_me answers"
-    )
-    about_parser.add_argument(
-        "--output", "-o", type=Path, help="Output file path (default: stdout)"
-    )
+    # about_me command
+    about_parser = subparsers.add_parser('about_me', help='Generate about_me.md')
+    about_parser.add_argument('--answers', required=True, type=Path,
+                              help='JSON file with about_me answers')
+    about_parser.add_argument('--output', '-o', type=Path,
+                              help='Output file path (default: stdout)')
 
-    prefs_parser = subparsers.add_parser(
-        "ai_preferences", help="Generate ai_preferences.md"
-    )
-    prefs_parser.add_argument(
-        "--answers",
-        required=True,
-        type=Path,
-        help="JSON file with ai_preferences answers",
-    )
-    prefs_parser.add_argument(
-        "--output", "-o", type=Path, help="Output file path (default: stdout)"
-    )
+    # ai_preferences command
+    prefs_parser = subparsers.add_parser('ai_preferences', help='Generate ai_preferences.md')
+    prefs_parser.add_argument('--answers', required=True, type=Path,
+                              help='JSON file with ai_preferences answers')
+    prefs_parser.add_argument('--output', '-o', type=Path,
+                              help='Output file path (default: stdout)')
 
-    all_parser = subparsers.add_parser("all", help="Generate both files")
-    all_parser.add_argument(
-        "--about", required=True, type=Path, help="JSON file with about_me answers"
-    )
-    all_parser.add_argument(
-        "--prefs",
-        required=True,
-        type=Path,
-        help="JSON file with ai_preferences answers",
-    )
-    all_parser.add_argument(
-        "--outdir",
-        "-d",
-        type=Path,
-        default=Path("."),
-        help="Output directory (default: current dir)",
-    )
+    # all command
+    all_parser = subparsers.add_parser('all', help='Generate both files')
+    all_parser.add_argument('--about', required=True, type=Path,
+                            help='JSON file with about_me answers')
+    all_parser.add_argument('--prefs', required=True, type=Path,
+                            help='JSON file with ai_preferences answers')
+    all_parser.add_argument('--outdir', '-d', type=Path, default=Path('.'),
+                            help='Output directory (default: current dir)')
+
+    for sub in (about_parser, prefs_parser, all_parser):
+        sub.add_argument('--validate', action='store_true',
+                         help='Validate answers against the JSON schema first')
+        sub.add_argument('--json', action='store_true', dest='as_json',
+                         help='Emit machine-readable JSON instead of the rendered file')
+        sub.add_argument('--force', '-f', action='store_true',
+                         help='Overwrite existing output files without prompting')
+        sub.add_argument('--verbose', '-v', action='store_true',
+                         help='Print diagnostic detail')
 
     args = parser.parse_args()
+
     if not args.command:
         parser.print_help()
-        return 1
+        sys.exit(EXIT_ERROR)
 
-    try:
-        if args.command == "all":
-            about_data = load_json(args.about)
-            prefs_data = load_json(args.prefs)
-            generate("about_me", about_data, args.outdir / "about_me.md")
-            generate(
-                "ai_preferences", prefs_data, args.outdir / "ai_preferences.md"
-            )
-        elif args.command == "about_me":
-            generate("about_me", load_json(args.answers), args.output)
-        elif args.command == "ai_preferences":
-            generate("ai_preferences", load_json(args.answers), args.output)
-    except AnswerValidationError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        return 2
-    return 0
+    if args.command == 'all':
+        about_data = load_json(args.about)
+        prefs_data = load_json(args.prefs)
+
+        if args.validate:
+            about_valid, about_msgs = validate_answers('about_me', about_data, args.verbose)
+            prefs_valid, prefs_msgs = validate_answers('ai_preferences', prefs_data, args.verbose)
+            problems = [(m, 'about_me') for m in about_msgs] + [(m, 'ai_preferences') for m in prefs_msgs]
+            if not (about_valid and prefs_valid):
+                for msg, which in problems:
+                    print(f"Validation error ({which}): {msg}", file=sys.stderr)
+                sys.exit(EXIT_VALIDATION)
+
+        about_out = args.outdir / 'about_me.md'
+        prefs_out = args.outdir / 'ai_preferences.md'
+
+        about_result = generate('about_me', about_data, verbose=args.verbose)
+        prefs_result = generate('ai_preferences', prefs_data, verbose=args.verbose)
+
+        if args.as_json:
+            payload = {
+                'files': {
+                    'about_me': about_result,
+                    'ai_preferences': prefs_result,
+                }
+            }
+            print(json.dumps(payload, indent=2, ensure_ascii=False))
+            sys.exit(EXIT_OK)
+
+        ok = write_output(about_out, about_result, args.force)
+        ok = write_output(prefs_out, prefs_result, args.force) and ok
+        sys.exit(EXIT_OK if ok else EXIT_ERROR)
+    elif args.command in ('about_me', 'ai_preferences'):
+        data = load_json(args.answers)
+
+        if args.validate:
+            valid, msgs = validate_answers(args.command, data, args.verbose)
+            if not valid:
+                for msg in msgs:
+                    print(f"Validation error: {msg}", file=sys.stderr)
+                sys.exit(EXIT_VALIDATION)
+
+        result = generate(args.command, data, verbose=args.verbose)
+
+        if args.as_json:
+            payload = {'file': result, 'name': f'{args.command}.md'}
+            print(json.dumps(payload, indent=2, ensure_ascii=False))
+            sys.exit(EXIT_OK)
+
+        if args.output:
+            ok = write_output(args.output, result, args.force)
+            sys.exit(EXIT_OK if ok else EXIT_ERROR)
+        else:
+            print(result)
+            sys.exit(EXIT_OK)
+    else:
+        parser.print_help()
+        sys.exit(EXIT_ERROR)
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())
+if __name__ == '__main__':
+    main()

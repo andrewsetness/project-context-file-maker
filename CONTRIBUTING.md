@@ -47,8 +47,23 @@ python scripts/validate.py --strict
 4. Add test fixtures in `tests/fixtures/`
 5. Add tests in `tests/`
 6. Update `templates/paid/CATALOG.md` if paid
-7. Run `python scripts/validate.py --strict`
-8. Run `python -m pytest tests/ -v`
+7. If you change a template or fixture, regenerate the example outputs so
+   they stay byte-faithful to engine output:
+   ```bash
+   python scripts/generate.py about_me --answers tests/fixtures/about_me_answers.json --output output-examples/about_me_example.md --force
+   python scripts/generate.py ai_preferences --answers tests/fixtures/ai_preferences_answers.json --output output-examples/ai_preferences_example.md --force
+   ```
+8. Run `python scripts/validate.py --strict`
+9. Run `python -m pytest tests/ -v`
+
+## Interviewer Checklist Tool
+
+`scripts/checklist.py` renders the full interview checklist from the question
+banks and can flag missing fields against a partial answers file:
+
+```bash
+python scripts/checklist.py about_me --answers data/partial.json
+```
 
 ## Running the Test Suite
 

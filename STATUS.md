@@ -1,23 +1,23 @@
 # STATUS — Context File Maker
 
 - **Purpose:** Interview-and-generation toolkit for AI context files.
-- **Overall Status:** v0.1.3 — deterministic free-tier generation implemented; conversational Cursor interview still needs an end-to-end product test.
-- **Last Updated:** 2026-08-19
+- **Overall Status:** v0.2.1 — deterministic free-tier generation with polished template output, hardened CLI, schema/question-bank validation, 121-test suite, and CI. Conversational Cursor interview still needs an end-to-end product test.
+- **Last Updated:** 2026-08-22
 - **Blocker:** None for CLI generation; do not expand paid-tier scope before the free interview path is validated.
 
 ## Current runtime
 
-Implemented:
-
 - Free-tier templates: `about_me.md` + `ai_preferences.md`
 - Question banks for both free-tier files
 - JSON answer schemas under `schemas/`
-- Template engine (`scripts/template_engine.py`)
-- CLI generator (`scripts/generate.py`)
-- **Runtime schema enforcement before rendering/writing**
-- Template/question/schema/fixture validator (`scripts/validate.py`)
+- Template engine (`scripts/template_engine.py`) — Mustache-style filling: `{{field}}`, `{{~field}}` for `[not provided]`, `{{#field}}` conditionals, `{{#any:f1,f2}}` section gates; line-isolated and inline blocks; list values rendered as text
+- CLI generator (`scripts/generate.py`) — JSON answers → markdown with `--validate`, `--json`, `--force`, `--verbose`; diagnostics to stderr so stdout stays clean markdown
+- **Runtime schema enforcement before rendering/writing** — invalid payloads fail closed
+- Template/question/schema/fixture validator (`scripts/validate.py`) — placeholder-field mapping, schema↔question-bank cross-check, example drift guard; reuses the engine's tokenizer
+- Interviewer checklist (`scripts/checklist.py`) — question-bank checklists, missing-field flags
+- Shared CLI config (`scripts/common.py`) + `requirements-dev.txt`
 - GitHub Actions quality gate (pytest + `validate.py --strict`)
-- Unit/integration/regression tests, including invalid-payload rejection
+- Unit/integration/regression tests (121), including invalid-payload rejection
 - Synthetic full/minimal test fixtures
 - Synthetic example outputs under `output-examples/`
 - Data/privacy/output contract: `docs/DATA-CONTRACT.md`
@@ -36,15 +36,14 @@ The generator validates structured JSON and renders deterministic templates. It 
 
 Current tracked files are synthetic. Git history predating the 2026-08-18 fixture cleanup has not been rewritten; deciding whether that historical personal-looking fixture material warrants a destructive history purge is an explicit owner/privacy decision.
 
-## Recent remediation — 2026-08-18
+## Recent milestones
 
-- Added `docs/DATA-CONTRACT.md` defining question → answer JSON → schema validation → template → explicit output flow.
-- Added schema validation to `scripts/generate.py`; invalid required fields/types now fail before output is written.
-- Added generator validation regression tests.
-- Replaced personal-looking tracked full fixtures/examples with explicitly fictional data.
-- Corrected README language that previously described `output-examples/` as the destination for generated user files.
-- Removed the stale open item to create examples; the examples already existed.
-- Made the public repo self-contained: dropped unpublished sibling-plan paths, named canonical spec files, documented license/release as an owner decision, and extended `validate.py` to enforce the answer-schema contract in CI.
+- 2026-08-06: Project scaffolded. All Phase 1a root documents created. Free tier agent prompt, templates, question banks, paid catalog implemented.
+- 2026-08-06 v0.1.1: Critical review completed. Template engine, validator, CLI, JSON schemas, and 78-test suite built.
+- 2026-08-08 v0.2: Product polish pass. `{{~field}}` / `{{#any:...}}` template syntax, line-aware conditional removal, CLI flags (`--validate`/`--json`/`--force`/`--verbose`), checklist tool, drift-guarded example outputs, 106 tests.
+- 2026-08-18 v0.1.3 (remote line): Self-contained clone, DATA-CONTRACT.md, schema-enforced generation, synthetic fixtures replacing personal data, CI quality gate.
+- 2026-08-22 v0.2.1: Maintenance pass — stderr diagnostics routing, inline any-block support, deterministic field ordering, fail-closed schema validation, jsonschema-independent typo detection, schema↔question-bank cross-check, shared config dedupe, docs path fixes, 121 tests.
+- 2026-08-22 reconciliation: The two divergent lines (local v0.2.x and remote v0.1.3) were reconciled per owner decision (Option A: rebase local onto origin/master). Remote's CI/synthetic fixtures/DATA-CONTRACT kept as base; v0.2 feature set re-applied on top.
 
 ## Open Items
 
@@ -52,7 +51,8 @@ Current tracked files are synthetic. Git history predating the 2026-08-18 fixtur
 - [ ] Measure the actual interview time before presenting the ~3 min / ~2 min figures as validated user-facing claims.
 - [ ] Decide whether interview answer JSON should have a supported local resume format; if so, define its ignored/private storage lifecycle first.
 - [ ] Reconcile `profile.yaml` / cross-agent discovery only if this agent is intentionally promoted into the shared portfolio runtime.
-- [ ] Decide which paid category to implement **after** the free-tier interview path is proven.
+- [ ] Decide which paid category to implement **after** the free-tier interview path is proven (B — Agent Soul & Identity recommended).
+- [ ] Optionally: add a `--tone`/theme variant for generated files (personal vs business).
 - [ ] **Owner/privacy decision:** decide whether to rewrite Git history to purge the pre-2026-08-18 personal-looking fixture history. Do not rewrite history implicitly; current tracked fixtures/examples are already synthetic.
 - [ ] **Owner decision:** choose a license and, if desired, a GitHub Release process. Do not invent either.
 

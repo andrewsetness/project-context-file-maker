@@ -1,6 +1,6 @@
 # Context File Maker — Paid Tier Catalog
 
-This is the complete catalog of paid tier context files (60+ files across 14 categories). These are cataloged and ready for implementation in future batches. Each category maps to real file patterns used across Andrew Setness's 15+ Cursor projects and/or recognized open standards in the AGENTS.md ecosystem, Soul Protocol/Soul Memory, agent-soul frameworks, and cross-tool adapter landscape.
+This is the complete catalog of paid tier context files (60+ files across 14 categories). These are cataloged and ready for implementation in future batches. Each category maps to real file patterns used across Andrew Setness's 15+ AI projects and/or recognized open standards in the AGENTS.md ecosystem, Soul Protocol/Soul Memory, agent-soul frameworks, and cross-tool adapter landscape.
 
 **Status:** Cataloged. Not yet implemented.
 **Pricing:** $29 one-time / $49 annual (proposed; not a published offer)
@@ -221,6 +221,6 @@ These are auto-generated from category inputs — no separate interview needed.
 
 ## Total: 60+ files across 14 categories
 
-All files are pattern-matched from real usage across Andrew Setness's 15+ Cursor projects and recognized open standards. No speculative file types — every file has a proven use case.
+All files are pattern-matched from real usage across Andrew Setness's 15+ AI projects and recognized open standards. No speculative file types — every file has a proven use case.
 
 **Next step:** Decide which batch to implement first. Recommended: Batch 1 (Agent Soul & Identity).

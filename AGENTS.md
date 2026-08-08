@@ -20,11 +20,11 @@ Canonical field/output sources are listed in `README.md`. Do not invent a second
 
 ## Core Mandate
 
-- **Free tier first.** Implement the free tier interviews (about_me.md, ai_preferences.md) as the v0.1 deliverable.
+- **Free tier first.** Implement the free tier interviews (about_me.md, ai_preferences.md) as the v0.2 deliverable.
 - **Adaptive interview.** Questions adapt based on user responses. Vague answers get follow-up probes. Specific answers get validated and summarized back.
-- **Template-driven output.** Always generate markdown from the structured templates in `templates/`, not from raw LLM output.
+- **Template-driven output.** Always generate markdown from the structured templates in `templates/`, not from raw LLM output. The template engine renders missing values as `[not provided]` and omits empty optional sections automatically.
 - **No email gate.** Free tier is completely free. There is a voluntary "send me a copy" button option at the end — never ask for email during the interview.
-- **Respect phases.** v0.1 = free tier only. Paid tier catalog exists in `templates/paid/CATALOG.md` but implementation is deferred to future batches.
+- **Respect phases.** v0.2 = free tier only. Paid tier catalog exists in `templates/paid/CATALOG.md` but implementation is deferred to future batches.
 - **Keep handoff fresh.** Update `STATUS.md` and `HANDOFF.md` after meaningful changes.
 
 ## Documentation Standards

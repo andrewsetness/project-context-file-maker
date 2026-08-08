@@ -2,7 +2,7 @@
 
 An interview-and-generation toolkit for structured AI context files, starting with the free-tier `about_me.md` and `ai_preferences.md`.
 
-**Status:** v0.1.3 — free-tier templates, schemas, deterministic generator, and validation tests implemented. Cursor interview flow still needs an end-to-end product test. Paid-tier catalog is future scope.  
+**Status:** v0.2.1 — free-tier templates, schemas, deterministic generator with polished output (`[not provided]` affordances, section gates), hardened CLI, validation tests, and CI. Cursor interview flow still needs an end-to-end product test. Paid-tier catalog is future scope.  
 **Repo:** `andrewsetness/project-context-file-maker`
 
 This repository is self-contained. A fresh clone can read the product, generate files from JSON answers, and run the validator/tests without any sibling repo.
@@ -43,13 +43,15 @@ The Cursor interview flow is implemented as prompts/skills but is still an open 
 
 ```powershell
 python scripts/generate.py about_me --answers C:\private\about_me.json --output C:\private\about_me.md
-python scripts/generate.py ai_preferences --answers C:\private\prefs.json --output C:\private\ai_preferences.md
-python scripts/generate.py all --about C:\private\about_me.json --prefs C:\private\prefs.json --outdir C:\private\context
+python scripts/generate.py ai_preferences --answers C:\private\prefs.json --validate -o C:\private\ai_preferences.md
+python scripts/generate.py all --about C:\private\about_me.json --prefs C:\private\prefs.json --outdir C:\private\context --validate --force
 ```
 
-Without `--output`, a single-file command prints to stdout. The generator does not silently write personal data into the repository.
+Without `--output`, a single-file command prints to stdout. All subcommands accept `--validate` (schema-check answers first), `--json` (machine-readable payload), `--force` (overwrite without prompting), and `--verbose` (diagnostics on stderr). The generator does not silently write personal data into the repository.
 
 Invalid payloads fail before output is written when required fields are missing or known fields have the wrong type.
+
+Synthetic example payloads live in `tests/fixtures/`; `output-examples/` shows what generated files look like.
 
 ## Free tier
 
@@ -119,15 +121,19 @@ project-context-file-maker/
 ├── README.md
 ├── STATUS.md
 ├── ARCHITECTURE.md
+├── requirements-dev.txt           # test dependencies (pytest, jsonschema)
 ├── schemas/                       # machine-readable answer contracts
 ├── templates/free/                # deterministic markdown templates
 ├── docs/
 │   ├── DATA-CONTRACT.md           # authority, privacy, output lifecycle
+│   ├── README.md                  # docs index
 │   └── questionnaires/            # interview question banks
 ├── scripts/
 │   ├── generate.py                # validate JSON → render markdown
-│   ├── template_engine.py
-│   └── validate.py
+│   ├── template_engine.py         # {{field}}, {{~field}}, {{#field}}, {{#any:...}}
+│   ├── validate.py                # schema/question/template/fixture checks
+│   ├── checklist.py               # interview checklists from question banks
+│   └── common.py                  # shared optional-field config + console setup
 ├── tests/                         # synthetic fixtures + regression tests
 └── output-examples/               # synthetic examples only; never user output
 ```
@@ -135,6 +141,7 @@ project-context-file-maker/
 ## Verification
 
 ```powershell
+pip install -r requirements-dev.txt
 python -m pytest -q
 python scripts/validate.py --strict
 ```

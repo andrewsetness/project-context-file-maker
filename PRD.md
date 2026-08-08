@@ -1,8 +1,9 @@
 # PRD — Context File Maker
 
 **Version:** 1.0
-**Status:** v0.1 implementation active
-**Last updated:** 2026-08-18
+**Version:** 1.0
+**Status:** v0.2.1 implementation active
+**Last updated:** 2026-08-22
 
 This file is the canonical product-behavior spec (user stories, functional/non-functional requirements, out of scope). It is not the field/output contract.
 

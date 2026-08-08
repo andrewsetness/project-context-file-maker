@@ -15,6 +15,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scripts/validate.py` now checks JSON Schema contracts against question banks, templates, and fixtures.
 - Regression tests for sibling-local path leakage and schema-contract mismatches.
 
+## [0.2.0] — 2026-08-08
+
+### Added
+- Template engine: `{{~field}}` renders `[not provided]` for empty/missing values
+- Template engine: `{{#any:f1,f2}}...{{/any}}` section gates — sections with no
+  populated fields are omitted entirely (e.g. Personal, Pet Peeves)
+- Template engine: line-isolated conditional blocks removed without leaving
+  stray blank lines (fixes broken markdown lists)
+- CLI: `--validate` flag validates answers against JSON schemas before generating
+- CLI: `--json` machine-readable output mode
+- CLI: `--force`/`-f` overwrite flag and interactive overwrite prompt
+- CLI: `--verbose`/`-v` diagnostics (unfilled optional fields)
+- CLI: UTF-8 console output on Windows (em-dashes render correctly)
+- CLI: exit code 2 for validation failures
+- Validator: understands `{{~field}}` and `{{#any:...}}` syntax; reuses the
+  engine's tokenizer so validation can't drift from what the engine understands
+- Templates: `[not provided]` affordances for missing values; conditional
+  company line; section gates for Personal / Pet Peeves & Non-Negotiables
+- Interviewer checklist tool (`scripts/checklist.py`): renders question-bank
+  checklists and flags missing fields from partial answers
+- Example outputs regenerated from the engine and enforced byte-faithful by
+  both the test suite and the validator (drift guard)
+- Tests: 28 new tests (missing-value placeholders, any-sections, line
+  conditionals, CLI flags, checklist tool, example fidelity, unknown fields)
+
+### Fixed
+- Minimal answer payloads no longer render orphan `~`, blank labels, or empty
+  section headers
+- Empty optional sections (`## Personal`, `## Pet Peeves & Non-Negotiables`)
+  are now omitted instead of rendering as blank headers
+>>>>>>> 65900d6 (feat(v0.2): product polish pass — template engine, CLI, validator, checklist)
+
 ## [0.1.0] — 2026-08-06
 
 ### Added

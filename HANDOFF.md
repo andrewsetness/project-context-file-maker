@@ -1,7 +1,5 @@
 # Context File Maker — Handoff
 
-# Context File Maker — Handoff
-
 **Repo:** `andrewsetness/project-context-file-maker`  
 **Current state:** `STATUS.md`  
 **Canonical sources:** `README.md` (map) and `docs/DATA-CONTRACT.md` (input/output)
@@ -15,20 +13,28 @@ toolkit for AI context files.
 This repository is self-contained. Do not require sibling repos to understand
 or validate the product.
 
-Current phase: v0.1.3 — free tier (about_me.md + ai_preferences.md) with
-schema-validated generation, validator, tests, and CI.
+Current phase: v0.2.1 — free tier (about_me.md + ai_preferences.md) with
+polished template output ([not provided] affordances, section gates), hardened
+CLI, schema/question-bank validation, tests, and CI.
 
 Read STATUS.md, docs/DATA-CONTRACT.md, PRD.md, AGENTS.md, and CONTRIBUTING.md.
 Use README.md for the canonical-source map. Only read interview prompt/skill
 files when changing conversational UX.
 
 Tooling:
-- scripts/template_engine.py — Mustache-style template filling
-- scripts/validate.py — schema/question/template/fixture contract checks
-- scripts/generate.py — CLI: JSON answers → markdown files
+- scripts/template_engine.py — Mustache-style template filling ({{field}},
+  {{~field}} for [not provided], {{#field}} conditionals, {{#any:...}} section
+  gates; inline blocks and list values supported)
+- scripts/validate.py — schema/question/template/fixture contract checks +
+  placeholder-field mapping; reuses the engine's tokenizer
+- scripts/generate.py — CLI: JSON answers → markdown files (--validate, --json,
+  --force, --verbose flags); diagnostics to stderr, markdown to stdout
+- scripts/checklist.py — interview checklist from question banks
+- scripts/common.py — shared optional-field config + console setup
 
 Testing:
-- python -m pytest -q
+- pip install -r requirements-dev.txt
+- python -m pytest tests/ -v  (121+ tests)
 - python scripts/validate.py --strict
 
 The paid tier catalog exists in templates/paid/CATALOG.md but implementation
@@ -50,7 +56,7 @@ The `context-file-maker-core.mdc` rule loads automatically and points to `SOUL.m
 
 See `STATUS.md`. This file is session orientation only; do not copy product rules here.
 
-- **Phase:** v0.1.3 — deterministic free-tier generation implemented
+- **Phase:** v0.2.1 — deterministic free-tier generation with polished output
 - **Scope:** 2 free files (`about_me.md`, `ai_preferences.md`)
 - **Paid:** cataloged in `templates/paid/CATALOG.md` — deferred
 - **License/releases:** unresolved owner decision; see README

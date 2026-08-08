@@ -3,27 +3,27 @@
 
 ## Identity
 - **Name:** {{full_name}}{{#preferred_name}} ({{preferred_name}}){{/preferred_name}}
-- **Role:** {{job_title}} at {{company}}
-- **Industry:** {{industry}} | **Company Size:** ~{{company_size}}
-- **Experience:** {{years_experience}} years | **Location:** {{location}}
+- **Role:** {{job_title}}{{#company}} at {{company}}{{/company}}
+- **Industry:** {{~industry}} | **Company Size:** {{~company_size}}
+- **Experience:** {{~years_experience}} | **Location:** {{~location}}
 
 ## What I Do
-{{primary_work}}
+{{~primary_work}}
 
 ## Current Focus
-{{current_projects}}
+{{~current_projects}}
 
 ## Biggest Challenge
-{{biggest_challenge}}
+{{~biggest_challenge}}
 
 ## Goals
-- **6 months:** {{goals_6mo}}
-- **2 years:** {{goals_2yr}}
+- **6 months:** {{~goals_6mo}}
+- **2 years:** {{~goals_2yr}}
 
 ## Technical
-- **Stack:** {{tech_stack}}
-- **AI Tools:** {{ai_tools}}
-- **AI Proficiency:** {{ai_proficiency}}
+- **Stack:** {{~tech_stack}}
+- **AI Tools:** {{~ai_tools}}
+- **AI Proficiency:** {{~ai_proficiency}}
 {{#ai_pain_points}}
 - **AI Pain Points:** {{ai_pain_points}}
 {{/ai_pain_points}}
@@ -35,14 +35,16 @@
 {{/tools_avoid}}
 
 ## Preferences
-- **Communication:** {{communication_style}}
-- **Learning:** {{learning_style}}
-- **Work Hours:** {{work_hours}}
+- **Communication:** {{~communication_style}}
+- **Learning:** {{~learning_style}}
+- **Work Hours:** {{~work_hours}}
 
-{{#hobbies}}
+{{#any:hobbies,fun_fact}}
 ## Personal
+{{#hobbies}}
 - **Interests:** {{hobbies}}
 {{/hobbies}}
 {{#fun_fact}}
 - **Fun Fact:** {{fun_fact}}
 {{/fun_fact}}
+{{/any}}

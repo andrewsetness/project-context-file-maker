@@ -107,6 +107,29 @@ class TestExampleOutputConsistency:
         assert not missing, f"Example missing sections: {missing}"
 
 
+class TestExampleOutputsAreGenerated:
+    """Example outputs must be byte-faithful to the engine output, so they
+    can't drift from what users actually get."""
+
+    def test_about_me_example_is_generated_output(self, project_root, about_me_answers):
+        from pathlib import Path
+        from template_engine import fill_template
+
+        template = (project_root / 'templates' / 'free' / 'about_me.md').read_text(encoding='utf-8')
+        generated = fill_template(template, about_me_answers)
+        example = (project_root / 'output-examples' / 'about_me_example.md').read_text(encoding='utf-8')
+        assert example == generated, "about_me_example.md drifted from engine output — regenerate it"
+
+    def test_ai_preferences_example_is_generated_output(self, project_root, ai_preferences_answers):
+        from pathlib import Path
+        from template_engine import fill_template
+
+        template = (project_root / 'templates' / 'free' / 'ai_preferences.md').read_text(encoding='utf-8')
+        generated = fill_template(template, ai_preferences_answers)
+        example = (project_root / 'output-examples' / 'ai_preferences_example.md').read_text(encoding='utf-8')
+        assert example == generated, "ai_preferences_example.md drifted from engine output — regenerate it"
+
+
 class TestSchemaValidation:
     """Test JSON answer fixtures against their schemas."""
 
@@ -202,6 +225,132 @@ class TestCLIInterface:
             capture_output=True, text=True
         )
         assert result.returncode != 0
+
+    def test_generate_with_validation_passes(self, tmp_path, about_me_answers):
+        """--validate should accept a schema-valid payload."""
+        import subprocess
+
+        answers_file = tmp_path / 'answers.json'
+        answers_file.write_text(json.dumps(about_me_answers))
+
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS_DIR / 'generate.py'),
+             'about_me', '--answers', str(answers_file), '--validate'],
+            capture_output=True, text=True
+        )
+        assert result.returncode == 0
+
+    def test_generate_validation_failure_exit_code(self, tmp_path):
+        """Invalid answers (missing required field) should exit 2."""
+        import subprocess
+
+        bad_file = tmp_path / 'bad.json'
+        bad_file.write_text(json.dumps({'full_name': 'Incomplete'}))
+
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS_DIR / 'generate.py'),
+             'about_me', '--answers', str(bad_file), '--validate'],
+            capture_output=True, text=True
+        )
+        assert result.returncode == 2
+        assert 'Validation error' in result.stderr
+
+    def test_generate_json_mode(self, tmp_path, about_me_answers):
+        """--json should emit a machine-readable payload with the file content."""
+        import subprocess
+
+        answers_file = tmp_path / 'answers.json'
+        answers_file.write_text(json.dumps(about_me_answers))
+
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS_DIR / 'generate.py'),
+             'about_me', '--answers', str(answers_file), '--json'],
+            capture_output=True, text=True
+        )
+        assert result.returncode == 0
+        payload = json.loads(result.stdout)
+        assert payload['name'] == 'about_me.md'
+        assert 'Andrew Setness' in payload['file']
+
+    def test_generate_force_overwrites(self, tmp_path, about_me_answers):
+        """--force should overwrite an existing output file."""
+        import subprocess
+
+        answers_file = tmp_path / 'answers.json'
+        answers_file.write_text(json.dumps(about_me_answers))
+        output_file = tmp_path / 'output.md'
+        output_file.write_text('old content')
+
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS_DIR / 'generate.py'),
+             'about_me', '--answers', str(answers_file),
+             '--output', str(output_file), '--force'],
+            capture_output=True, text=True
+        )
+        assert result.returncode == 0
+        assert 'Andrew Setness' in output_file.read_text(encoding='utf-8')
+
+    def test_generate_warns_on_unknown_fields(self, tmp_path):
+        """Typo'd answer keys should produce a verbose warning."""
+        import subprocess
+
+        answers_file = tmp_path / 'answers.json'
+        answers_file.write_text(json.dumps({
+            'full_name': 'A', 'full_naem': 'B',  # typo
+            'job_title': 'X', 'primary_work': 'Y', 'biggest_challenge': 'Z',
+        }))
+
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS_DIR / 'generate.py'),
+             'about_me', '--answers', str(answers_file),
+             '--validate', '--verbose'],
+            capture_output=True, text=True
+        )
+        assert result.returncode == 0
+        assert 'unknown answer fields' in result.stdout
+        assert 'full_naem' in result.stdout
+
+
+class TestChecklistTool:
+    """Test the interviewer checklist tool."""
+
+    def test_checklist_parses_all_questions(self, project_root):
+        import subprocess
+
+        result = subprocess.run(
+            [sys.executable, str(project_root / 'scripts' / 'checklist.py'), 'about_me'],
+            capture_output=True, text=True, encoding='utf-8'
+        )
+        assert result.returncode == 0
+        assert 'interview checklist' in result.stdout
+        assert 'What name should AI assistants use for you?' in result.stdout
+        assert '24 questions' in result.stdout
+
+    def test_checklist_flags_missing_fields(self, project_root, tmp_path, about_me_minimal):
+        import subprocess
+
+        answers_file = tmp_path / 'partial.json'
+        answers_file.write_text(json.dumps(about_me_minimal))
+
+        result = subprocess.run(
+            [sys.executable, str(project_root / 'scripts' / 'checklist.py'),
+             'about_me', '--answers', str(answers_file)],
+            capture_output=True, text=True, encoding='utf-8'
+        )
+        assert result.returncode == 0
+        assert 'Missing required fields' in result.stdout
+        assert 'tech_stack' in result.stdout
+
+    def test_checklist_all_reports_both(self, project_root):
+        import subprocess
+
+        result = subprocess.run(
+            [sys.executable, str(project_root / 'scripts' / 'checklist.py'), 'all'],
+            capture_output=True, text=True, encoding='utf-8'
+        )
+        assert result.returncode == 0
+        assert 'about_me \u2014 interview checklist' in result.stdout
+        assert 'ai_preferences \u2014 interview checklist' in result.stdout
 
 
 class TestFileIntegrity:

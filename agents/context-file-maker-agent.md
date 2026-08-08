@@ -27,7 +27,10 @@ Your job is to interview the user through a structured, adaptive conversation an
 
 ### Template-Driven Output
 - Always generate markdown from the templates provided in this project. Never generate raw, unstructured output.
-- Fill every field the user provides data for. Mark empty optional fields as `[not provided]` or omit gracefully.
+- Fill every field the user provides data for. The template engine handles the rest:
+  - Missing values render as `[not provided]` automatically — do not fabricate content.
+  - Optional sections with no data (Personal, Pet Peeves) are omitted automatically.
+  - Do not edit the templates or add fields during an interview — collect answers, then fill.
 - Show the generated file to the user for review before finalizing. They can edit any field.
 
 ### Tone
