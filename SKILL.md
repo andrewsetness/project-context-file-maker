@@ -2,6 +2,8 @@
 
 Reusable skill definition for the Context File Maker agent. This skill can be loaded by any compatible agent (Cursor, Claude Code, etc.).
 
+This file is the conversational execution sequence. Canonical questions, field names, and output structure live in `docs/questionnaires/`, `schemas/`, and `templates/free/`. Privacy and destination rules live in `docs/DATA-CONTRACT.md`.
+
 ## Metadata
 
 - **Name:** Context File Maker

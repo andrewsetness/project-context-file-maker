@@ -28,6 +28,8 @@ Natural language in this workspace:
 
 ## Current Priorities
 
-1. Deliver flawless free tier interview experience
-2. Keep agent prompt, templates, and question banks in sync
-3. Prepare for Batch 1 paid implementation (Agent Soul & Identity)
+See `STATUS.md` for the live list. Do not treat this file as a second backlog.
+
+1. Validate the free-tier conversational interview end-to-end
+2. Keep questionnaires, schemas, and templates in sync (`scripts/validate.py --strict`)
+3. Do not start paid-tier generation before the free interview path is proven

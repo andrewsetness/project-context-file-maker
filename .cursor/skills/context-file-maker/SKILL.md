@@ -2,6 +2,8 @@
 
 Execution protocol for the Context File Maker agent when invoked in Cursor.
 
+Canonical questions, field names, and output structure live in `docs/questionnaires/`, `schemas/`, and `templates/free/`. This file does not redefine those contracts.
+
 ## Invocation
 
 Natural language triggers:

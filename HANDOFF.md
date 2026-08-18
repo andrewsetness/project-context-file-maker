@@ -1,41 +1,41 @@
 # Context File Maker — Handoff
 
-**Workspace:** `project-context-file-maker` (parent folder: `Cursor Projects`)
-**Repo:** `andrewsetness/project-context-file-maker`
-**Business plan:** `../03-business/project-setness-consulting/business/PLAN_PA2.3_CONTEXT_FILE_BUILDER_PRO.md`
+**Repo:** `andrewsetness/project-context-file-maker`  
+**Current state:** `STATUS.md`  
+**Canonical sources:** `README.md` (map) and `docs/DATA-CONTRACT.md` (input/output)
 
 ## Resume Prompt
 
 ```
-I'm continuing work on project-context-file-maker — the interactive interview agent
-that builds AI context files for users.
+I'm continuing work on project-context-file-maker — the interview-and-generation
+toolkit for AI context files.
 
-This project implements PA2.3 from the Setness Consulting business plan.
-Current phase: v0.1.1 — free tier (about_me.md + ai_preferences.md) with full test suite and tooling.
+This repository is self-contained. Do not require sibling repos to understand
+or validate the product.
 
-Read SOUL.md, AGENTS.md, HANDOFF.md, STATUS.md, JOBS_TO_BE_DONE.md,
-ARCHITECTURE.md, PRD.md, and CONTRIBUTING.md.
+Current phase: v0.1.3 — free tier (about_me.md + ai_preferences.md) with
+schema-validated generation, validator, tests, and CI.
 
-The agent system prompt lives in agents/context-file-maker-agent.md.
-Output templates are in templates/free/.
-Full question banks are in docs/questionnaires/.
+Read STATUS.md, docs/DATA-CONTRACT.md, PRD.md, AGENTS.md, and CONTRIBUTING.md.
+Use README.md for the canonical-source map. Only read interview prompt/skill
+files when changing conversational UX.
 
 Tooling:
 - scripts/template_engine.py — Mustache-style template filling
-- scripts/validate.py — Syntax + placeholder-field validation
+- scripts/validate.py — schema/question/template/fixture contract checks
 - scripts/generate.py — CLI: JSON answers → markdown files
 
 Testing:
-- Run: python -m pytest tests/ -v  (78 tests)
-- Run validation: python scripts/validate.py --strict
+- python -m pytest -q
+- python scripts/validate.py --strict
 
 The paid tier catalog exists in templates/paid/CATALOG.md but implementation
-is deferred to future batches.
+is deferred until the free-tier interview path is proven.
 ```
 
 ## How to Start a Chat
 
-Open this project in Cursor and say one of:
+Open this project and say one of:
 
 - `build my context files` — Full free tier interview
 - `create an about me file` — about_me.md only
@@ -46,42 +46,13 @@ The `context-file-maker-core.mdc` rule loads automatically and points to `SOUL.m
 
 ## Current State
 
-- **Phase:** v0.1 — Free tier implementation active
-- **Scope:** 2 free files (about_me.md, ai_preferences.md)
-- **Paid:** 60+ files cataloged in `templates/paid/CATALOG.md` — deferred to future batches
-- **Business plan:** Scoped and detailed in `PLAN_PA2.3_CONTEXT_FILE_BUILDER_PRO.md`
+See `STATUS.md`. This file is session orientation only; do not copy product rules here.
+
+- **Phase:** v0.1.3 — deterministic free-tier generation implemented
+- **Scope:** 2 free files (`about_me.md`, `ai_preferences.md`)
+- **Paid:** cataloged in `templates/paid/CATALOG.md` — deferred
+- **License/releases:** unresolved owner decision; see README
 
 ## File Map
 
-```
-project-context-file-maker/
-├── SOUL.md                                    # Identity and operating contract
-├── HANDOFF.md                                 # This file
-├── STATUS.md                                  # Current state and open items
-├── JOBS_TO_BE_DONE.md                          # Operating scorecard
-├── AGENTS.md                                  # Agent guidance
-├── ARCHITECTURE.md                            # System design and data flow
-├── SKILL.md                                   # Agent skill definition
-├── PRD.md                                     # Full behavioral specification
-├── .cursor/
-│   ├── rules/context-file-maker-core.mdc       # Cursor rule (auto-loads SOUL.md)
-│   └── skills/context-file-maker/SKILL.md      # Execution protocol
-├── Context/
-│   └── MEMORY.md                               # Durable agent memory
-├── agents/
-│   └── context-file-maker-agent.md             # LLM system prompt
-├── templates/
-│   ├── free/
-│   │   ├── about_me.md                          # about_me.md output template
-│   │   └── ai_preferences.md                    # ai_preferences.md output template
-│   └── paid/
-│       └── CATALOG.md                           # Full paid tier catalog
-├── docs/
-│   ├── README.md                                # Docs index
-│   └── questionnaires/
-│       ├── about_me_questions.md                # about_me.md question bank
-│       └── ai_preferences_questions.md          # ai_preferences.md question bank
-└── output-examples/                             # Example generated outputs
-    ├── about_me_example.md
-    └── ai_preferences_example.md
-```
+See the project structure and canonical-source table in `README.md`. Do not maintain a second tree here.

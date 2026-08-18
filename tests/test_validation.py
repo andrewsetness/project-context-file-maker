@@ -8,6 +8,7 @@ Tests that the validator correctly:
   - Passes on correctly-mapped templates
 """
 
+import json
 import sys
 from pathlib import Path
 
@@ -184,3 +185,111 @@ class TestRealProjectValidation:
         )
         missing_warnings = [w for w in validator.warnings if 'no placeholder' in w.message.lower()]
         assert len(missing_warnings) == 0, f"Missing template placeholders: {[str(w) for w in missing_warnings]}"
+
+
+class TestInputContractValidation:
+    """The checked-in answer schemas are the machine-readable input contract."""
+
+    def test_schema_subset_accepts_current_shape(self, tmp_path):
+        schema_path = tmp_path / "answers.schema.json"
+        schema_path.write_text(
+            json.dumps(
+                {
+                    "$schema": "https://json-schema.org/draft/2020-12/schema",
+                    "title": "Demo",
+                    "type": "object",
+                    "properties": {
+                        "full_name": {"type": "string", "description": "Name"},
+                    },
+                    "required": ["full_name"],
+                }
+            ),
+            encoding="utf-8",
+        )
+        validator = Validator(root=tmp_path)
+        schema = validator.load_schema(schema_path)
+        fields = validator.validate_schema_subset(schema_path, schema)
+        assert fields == {"full_name"}
+        assert validator.errors == []
+
+    def test_schema_subset_rejects_unsupported_constructs(self, tmp_path):
+        schema_path = tmp_path / "answers.schema.json"
+        schema_path.write_text(
+            json.dumps(
+                {
+                    "type": "object",
+                    "properties": {
+                        "full_name": {"type": "string", "minLength": 1},
+                    },
+                    "allOf": [{"required": ["full_name"]}],
+                }
+            ),
+            encoding="utf-8",
+        )
+        validator = Validator(root=tmp_path)
+        schema = validator.load_schema(schema_path)
+        validator.validate_schema_subset(schema_path, schema)
+        messages = [error.message for error in validator.errors]
+        assert any("allOf" in message for message in messages)
+        assert any("minLength" in message for message in messages)
+
+    def test_input_contract_flags_schema_question_mismatch(self, tmp_path):
+        (tmp_path / "schemas").mkdir()
+        (tmp_path / "docs" / "questionnaires").mkdir(parents=True)
+        (tmp_path / "templates" / "free").mkdir(parents=True)
+        (tmp_path / "tests" / "fixtures").mkdir(parents=True)
+
+        (tmp_path / "schemas" / "about_me_answers.schema.json").write_text(
+            json.dumps(
+                {
+                    "type": "object",
+                    "properties": {
+                        "full_name": {"type": "string"},
+                        "orphan_field": {"type": "string"},
+                    },
+                    "required": ["full_name"],
+                }
+            ),
+            encoding="utf-8",
+        )
+        (tmp_path / "docs" / "questionnaires" / "about_me_questions.md").write_text(
+            "| # | Field | Question |\n|---|-------|----------|\n| 1 | full_name | Name? |\n",
+            encoding="utf-8",
+        )
+        (tmp_path / "templates" / "free" / "about_me.md").write_text(
+            "# About\n{{full_name}}\n",
+            encoding="utf-8",
+        )
+        (tmp_path / "tests" / "fixtures" / "about_me_answers.json").write_text(
+            json.dumps({"full_name": "Avery Chen"}),
+            encoding="utf-8",
+        )
+        (tmp_path / "tests" / "fixtures" / "about_me_minimal.json").write_text(
+            json.dumps({"full_name": "Avery Chen"}),
+            encoding="utf-8",
+        )
+
+        validator = Validator(root=tmp_path)
+        validator.validate_input_contract(
+            {
+                "name": "about_me",
+                "template": "templates/free/about_me.md",
+                "questions": "docs/questionnaires/about_me_questions.md",
+                "schema": "schemas/about_me_answers.schema.json",
+                "fixtures": [
+                    "tests/fixtures/about_me_answers.json",
+                    "tests/fixtures/about_me_minimal.json",
+                ],
+            }
+        )
+        assert any("orphan_field" in error.message for error in validator.errors)
+
+    def test_validate_all_enforces_real_input_contract(self, project_root):
+        validator = Validator(root=project_root)
+        assert validator.validate_all(check_examples=True)
+        contract_errors = [
+            error
+            for error in validator.errors
+            if "schema" in error.file or "Schema" in error.message
+        ]
+        assert contract_errors == []

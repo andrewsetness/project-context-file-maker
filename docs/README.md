@@ -4,11 +4,15 @@ All supporting documentation for the project.
 
 ## Core Docs
 
+This repository is self-contained. Start with the canonical-source table in `../README.md`.
+
 | Doc | Path | Purpose |
 |-----|------|---------|
-| Business Plan | `../03-business/project-setness-consulting/business/PLAN_PA2.3_CONTEXT_FILE_BUILDER_PRO.md` | Full business and implementation plan |
-| PRD | `../PRD.md` | Product requirements specification |
-| Architecture | `../ARCHITECTURE.md` | System design and data flow |
+| Canonical source map | `../README.md` | Which file owns which concern |
+| Data contract | `DATA-CONTRACT.md` | Input/output, privacy, examples |
+| PRD | `../PRD.md` | Product requirements |
+| Status | `../STATUS.md` | What is implemented now |
+| Architecture | `../ARCHITECTURE.md` | System design (narrative; defer to the data contract) |
 
 ## Interview Resources
 

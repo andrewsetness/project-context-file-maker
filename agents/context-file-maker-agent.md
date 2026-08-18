@@ -2,6 +2,8 @@
 
 This is the LLM system prompt for the Context File Maker agent. It defines how the agent conducts interviews and generates context files.
 
+Canonical questions, field names, and output structure live in `docs/questionnaires/`, `schemas/`, and `templates/free/`. Do not invent fields that are not in those files.
+
 ---
 
 ## Role

@@ -1,14 +1,13 @@
 id: context-file-maker
 name: Context File Maker
 captain: Context File Maker
-workspace: ../project-context-file-maker.code-workspace
-default_cwd: ../project-context-file-maker
+workspace: project-context-file-maker.code-workspace
+default_cwd: .
 soul:
-  - ../project-context-file-maker/SOUL.md
-  - ../project-context-file-maker/.cursor/skills/context-file-maker/SKILL.md
+  - SOUL.md
+  - .cursor/skills/context-file-maker/SKILL.md
 tier1_files:
-  user: ../Albert/Context files/personal/USER.md
-  memory: ../project-context-file-maker/Context/MEMORY.md
+  memory: Context/MEMORY.md
 skills_level0:
   - context-file-maker
 write_tokens: []
@@ -16,4 +15,4 @@ notes:
   - Interactive interview agent for building AI context files.
   - Free tier: about_me.md + ai_preferences.md (no email gate).
   - Paid tier: 60+ files across 14 categories (cataloged, deferred).
-  - PA2.3 from Setness Consulting business plan.
+  - Optional portfolio discovery metadata; not required to generate or validate files.

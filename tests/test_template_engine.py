@@ -128,8 +128,8 @@ class TestRealTemplates:
 
     def test_about_me_full(self, about_me_template, about_me_answers):
         result = fill_template(about_me_template, about_me_answers)
-        assert "Andrew Setness" in result
-        assert "Workday" in result
+        assert about_me_answers["full_name"] in result
+        assert about_me_answers["company"] in result
         assert "## What I Do" in result
         assert "## Biggest Challenge" in result
         assert "## Goals" in result
@@ -150,8 +150,9 @@ class TestRealTemplates:
         assert "Tools Avoided:" not in result
 
     def test_about_me_omits_empty_optional_fields(self, about_me_template, about_me_answers):
-        # tools_avoid is empty string in the fixture
-        result = fill_template(about_me_template, about_me_answers)
+        answers = dict(about_me_answers)
+        answers["tools_avoid"] = ""
+        result = fill_template(about_me_template, answers)
         assert "Tools Avoided:" not in result
 
     def test_ai_preferences_full(self, ai_preferences_template, ai_preferences_answers):
@@ -162,9 +163,9 @@ class TestRealTemplates:
         assert "## Workflow" in result
         assert "## Constraints" in result
         assert "## Pet Peeves & Non-Negotiables" in result
-        assert "Direct, professional" in result
-        assert "Always write tests with code" in result
-        assert "Unsolicited documentation files" in result
+        assert ai_preferences_answers["tone"] in result
+        assert ai_preferences_answers["test_policy"] in result
+        assert ai_preferences_answers["pet_peeves"] in result
 
     def test_ai_preferences_minimal(self, ai_preferences_template, ai_preferences_minimal):
         result = fill_template(ai_preferences_template, ai_preferences_minimal)

@@ -4,22 +4,19 @@ Guidance for AI agents (Cursor, Claude, Grok, etc.) working inside `project-cont
 
 ## Identity & Purpose
 
-This project implements the **Context File Maker** — an interactive interview agent that helps users build structured AI context files. It is a Setness Consulting product (PA2.3 in the business plan).
+This project implements the **Context File Maker** — an interview-and-generation toolkit for structured AI context files. It is a Setness Consulting product. This repository is the product source of truth; do not require unpublished sibling repos or business-plan files to understand or validate it.
 
-The agent conducts a structured, adaptive interview and generates polished markdown files that AI assistants use to understand the user and their preferences.
+The interview layer asks questions and produces JSON answers. The generator validates those answers against `schemas/` and renders `templates/free/`.
 
 ## Required Reading (Start of Every Session)
 
-1. `SOUL.md` — Identity, values, invocation, hard limits
-2. `AGENTS.md` — This file — agent guidance
-3. `HANDOFF.md` — Current state and workspace handoff
-4. `STATUS.md` — Priorities and open items
-5. `JOBS_TO_BE_DONE.md` — Operating scorecard
-6. `ARCHITECTURE.md` — System design and data flow
-7. `PRD.md` — Full behavioral specification
-8. `.cursor/skills/context-file-maker/SKILL.md` — Execution sequence
-9. `agents/context-file-maker-agent.md` — LLM system prompt (the actual interview agent prompt)
-10. `templates/free/about_me.md` and `templates/free/ai_preferences.md` — Output templates
+1. `STATUS.md` — what is actually implemented now
+2. `docs/DATA-CONTRACT.md` — input/output/privacy authority
+3. `PRD.md` — product behavior and free-tier requirements
+4. `AGENTS.md` — this file
+5. `SOUL.md` and `.cursor/skills/context-file-maker/SKILL.md` — only when changing interview identity or UX
+
+Canonical field/output sources are listed in `README.md`. Do not invent a second spec in session notes.
 
 ## Core Mandate
 
@@ -37,9 +34,9 @@ Maintain the Phase 1a standard root documents:
 
 Keep supporting docs in `docs/` with `docs/README.md` as the index.
 
-## Business Context
+## Product Context
 
-Full business plan at `../03-business/project-setness-consulting/business/PLAN_PA2.3_CONTEXT_FILE_BUILDER_PRO.md`.
-
-Free tier: 2 files (about_me.md, ai_preferences.md) — no email gate, no strings.
+Free tier: 2 files (`about_me.md`, `ai_preferences.md`) — no email gate, no strings.
 Paid tier (future): 60+ files across 14 categories, cataloged in `templates/paid/CATALOG.md`.
+
+Commercial planning that lives outside this repository is optional context for the owner. It is not required to clone, understand, or validate the product.

@@ -1,6 +1,6 @@
 # Contributing to Context File Maker
 
-Thanks for contributing. This project follows the same conventions as all Setness Cursor projects.
+Thanks for contributing. This repository is self-contained: a clone plus the commands below is enough to understand and validate the product.
 
 ## Phase 1a Document Standards
 
@@ -19,7 +19,8 @@ Every change should keep these 7 root documents current:
 # Clone the repo
 git clone https://github.com/andrewsetness/project-context-file-maker.git
 
-# Install test dependencies
+# Install test dependencies (jsonschema is used by fixture tests;
+# scripts/generate.py itself is dependency-free)
 pip install pytest jsonschema
 
 # Run tests
@@ -73,4 +74,8 @@ python scripts/validate.py --strict
 python -m pytest tests/ -v
 ```
 
-Both must pass. The validator checks template syntax and placeholder-field mapping. The test suite covers template engine correctness, validation logic, and end-to-end generation.
+Both must pass. The validator checks JSON Schema contracts, template syntax, and placeholder-field mapping. The test suite covers template engine correctness, validation logic, and end-to-end generation. CI runs the same two commands on `master`.
+
+## License
+
+License and GitHub Release process are an unresolved owner decision. Do not add a LICENSE file or invent reuse terms. See `README.md`.

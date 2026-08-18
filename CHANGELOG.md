@@ -5,6 +5,16 @@ All notable changes to the Context File Maker project.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] — 2026-08-18
+
+### Changed
+- Public clone is self-contained: removed unpublished sibling-repo plan paths and named canonical spec files in README.
+- Documented license and GitHub Release process as an unresolved owner decision.
+
+### Added
+- `scripts/validate.py` now checks JSON Schema contracts against question banks, templates, and fixtures.
+- Regression tests for sibling-local path leakage and schema-contract mismatches.
+
 ## [0.1.0] — 2026-08-06
 
 ### Added

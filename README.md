@@ -2,8 +2,10 @@
 
 An interview-and-generation toolkit for structured AI context files, starting with the free-tier `about_me.md` and `ai_preferences.md`.
 
-**Status:** v0.1.2 — free-tier templates, schemas, deterministic generator, and validation tests implemented. Cursor interview flow still needs an end-to-end product test. Paid-tier catalog is future scope.  
+**Status:** v0.1.3 — free-tier templates, schemas, deterministic generator, and validation tests implemented. Cursor interview flow still needs an end-to-end product test. Paid-tier catalog is future scope.  
 **Repo:** `andrewsetness/project-context-file-maker`
+
+This repository is self-contained. A fresh clone can read the product, generate files from JSON answers, and run the validator/tests without any sibling repo.
 
 ## Mental model
 
@@ -58,19 +60,35 @@ Invalid payloads fail before output is written when required fields are missing 
 
 The time figures are design targets, not measured usability claims until the Cursor interview is tested with users.
 
-## Contract ownership
+## Canonical sources
 
-| Concern | Source of truth |
+Do not treat every markdown file as a second spec. Use this map; other docs should link here instead of restating the same rules.
+
+| Concern | Canonical file |
 |---|---|
 | What questions are asked | `docs/questionnaires/*.md` |
 | Structured field names/types/required fields | `schemas/*_answers.schema.json` |
 | Markdown output structure | `templates/free/*.md` |
 | Runtime validation + generation | `scripts/generate.py` |
-| Template/question/example consistency | `scripts/validate.py` + tests |
-| Privacy/output/example rules | `docs/DATA-CONTRACT.md` |
+| Contract consistency (schema/question/template/fixtures) | `scripts/validate.py` + tests |
+| Privacy, output destination, example-data rules | `docs/DATA-CONTRACT.md` |
+| Product intent and free-tier requirements | `PRD.md` |
 | Current implementation state | `STATUS.md` |
+| Interview identity / hard limits | `SOUL.md` |
+| Conversational execution sequence | `.cursor/skills/context-file-maker/SKILL.md` |
 
 If these disagree, fix the disagreement. Do not invent or silently coerce user facts.
+
+`HANDOFF.md`, `JOBS_TO_BE_DONE.md`, `ARCHITECTURE.md`, `agents/context-file-maker-agent.md`, and `SKILL.md` are operating or narrative views. They must defer to the table above when they overlap.
+
+## License and releases
+
+**Unresolved owner decision:** this public repository has no license file and no published GitHub Release process. Do not invent a license (MIT, Apache, proprietary, or otherwise) or publish version tags until the owner records that decision here.
+
+Until then:
+
+- treat the code as source-available without a granted reuse right;
+- use `CHANGELOG.md` only as in-repo history, not as a release channel.
 
 ## Tracked examples are synthetic
 
@@ -88,10 +106,9 @@ For contributors, read in this order:
 
 1. `STATUS.md` — what is actually implemented now
 2. `docs/DATA-CONTRACT.md` — data flow, privacy, and authority
-3. `ARCHITECTURE.md` — broader design
+3. `PRD.md` — intended product behavior
 4. `AGENTS.md` — contributor/agent rules
-5. `.cursor/skills/context-file-maker/SKILL.md` — conversational execution sequence
-6. `PRD.md` — intended behavior and future scope
+5. `.cursor/skills/context-file-maker/SKILL.md` — only if changing the interview UX
 
 Historical session detail belongs in `CHANGELOG.md`/`HANDOFF.md`, not in the current-state contract.
 

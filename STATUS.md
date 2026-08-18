@@ -1,7 +1,7 @@
 # STATUS — Context File Maker
 
-- **Purpose:** Interview-and-generation toolkit for AI context files — PA2.3 from the Setness Consulting business plan.
-- **Overall Status:** v0.1.2 — deterministic free-tier generation implemented; conversational Cursor interview still needs an end-to-end product test.
+- **Purpose:** Interview-and-generation toolkit for AI context files.
+- **Overall Status:** v0.1.3 — deterministic free-tier generation implemented; conversational Cursor interview still needs an end-to-end product test.
 - **Last Updated:** 2026-08-18
 - **Blocker:** None for CLI generation; do not expand paid-tier scope before the free interview path is validated.
 
@@ -15,7 +15,8 @@ Implemented:
 - Template engine (`scripts/template_engine.py`)
 - CLI generator (`scripts/generate.py`)
 - **Runtime schema enforcement before rendering/writing**
-- Template/question/example validator (`scripts/validate.py`)
+- Template/question/schema/fixture validator (`scripts/validate.py`)
+- GitHub Actions quality gate (pytest + `validate.py --strict`)
 - Unit/integration/regression tests, including invalid-payload rejection
 - Synthetic full/minimal test fixtures
 - Synthetic example outputs under `output-examples/`
@@ -41,6 +42,7 @@ The generator validates structured JSON and renders deterministic templates. It 
 - Replaced personal-looking tracked full fixtures/examples with explicitly fictional data.
 - Corrected README language that previously described `output-examples/` as the destination for generated user files.
 - Removed the stale open item to create examples; the examples already existed.
+- Made the public repo self-contained: dropped unpublished sibling-plan paths, named canonical spec files, documented license/release as an owner decision, and extended `validate.py` to enforce the answer-schema contract in CI.
 
 ## Open Items
 
@@ -49,6 +51,7 @@ The generator validates structured JSON and renders deterministic templates. It 
 - [ ] Decide whether interview answer JSON should have a supported local resume format; if so, define its ignored/private storage lifecycle first.
 - [ ] Reconcile `profile.yaml` / cross-agent discovery only if this agent is intentionally promoted into the shared portfolio runtime.
 - [ ] Decide which paid category to implement **after** the free-tier interview path is proven.
+- [ ] **Owner decision:** choose a license and, if desired, a GitHub Release process. Do not invent either.
 
 ## Definition of done for the free tier
 

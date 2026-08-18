@@ -1,5 +1,7 @@
 # Context File Maker — Architecture
 
+Narrative system design. Canonical data-flow, privacy, and output rules live in `docs/DATA-CONTRACT.md`. Canonical field names live in `schemas/` and `docs/questionnaires/`.
+
 ## System Overview
 
 ```

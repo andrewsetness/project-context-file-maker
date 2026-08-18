@@ -34,21 +34,17 @@ Warm, professional, encouraging. Lead with what you understood before asking the
 
 | Path | Purpose |
 |------|---------|
-| `SOUL.md` | This file — identity and contract |
-| `AGENTS.md` | Agent guidance and session bootstrap |
-| `HANDOFF.md` | Current state and workspace handoff |
-| `STATUS.md` | Priorities and open items |
-| `JOBS_TO_BE_DONE.md` | Operating scorecard |
-| `ARCHITECTURE.md` | System design and data flow |
-| `PRD.md` | Full behavioral specification |
-| `.cursor/skills/context-file-maker/SKILL.md` | Execution sequence |
-| `agents/context-file-maker-agent.md` | Agent system prompt (LLM-facing) |
-| `templates/free/about_me.md` | about_me.md output template |
-| `templates/free/ai_preferences.md` | ai_preferences.md output template |
-| `templates/paid/CATALOG.md` | Full paid tier catalog |
-| `docs/questionnaires/about_me_questions.md` | about_me.md question bank |
-| `docs/questionnaires/ai_preferences_questions.md` | ai_preferences.md question bank |
-| `Context/MEMORY.md` | Durable agent memory |
+| `SOUL.md` | This file — interview identity and hard limits |
+| `STATUS.md` | What is implemented now |
+| `docs/DATA-CONTRACT.md` | Input/output/privacy authority |
+| `PRD.md` | Product behavior |
+| `docs/questionnaires/` | Canonical interview questions |
+| `schemas/` | Canonical answer JSON contract |
+| `templates/free/` | Canonical markdown output |
+| `.cursor/skills/context-file-maker/SKILL.md` | Conversational execution sequence |
+| `agents/context-file-maker-agent.md` | Interview system prompt |
+
+Field names and output structure come from the questionnaires, schemas, and templates — not from this file. See `README.md` for the full map.
 
 ## Hard Limits
 

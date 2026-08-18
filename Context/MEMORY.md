@@ -10,18 +10,15 @@ Purpose: compact, durable facts for sessions in `project-context-file-maker`.
 
 ## Canonical Paths
 
-- Identity and contract: `SOUL.md`
-- Handoff: `HANDOFF.md`
+See `README.md` for the full source map. Do not treat this list as a second spec.
+
 - Current state: `STATUS.md`
-- Operating scorecard: `JOBS_TO_BE_DONE.md`
-- Agent guidance: `AGENTS.md`
-- Architecture: `ARCHITECTURE.md`
-- Behavioral spec: `PRD.md`
-- Agent system prompt: `agents/context-file-maker-agent.md`
-- Cursor skill: `.cursor/skills/context-file-maker/SKILL.md`
-- Free templates: `templates/free/about_me.md`, `templates/free/ai_preferences.md`
+- Input/output/privacy: `docs/DATA-CONTRACT.md`
+- Product behavior: `PRD.md`
+- Interview identity: `SOUL.md`
+- Answer schemas: `schemas/`
 - Question banks: `docs/questionnaires/`
-- Paid catalog: `templates/paid/CATALOG.md`
+- Free templates: `templates/free/`
 
 ## Durable Operating Rules
 
@@ -33,13 +30,13 @@ Purpose: compact, durable facts for sessions in `project-context-file-maker`.
 - Show generated file for user review before finalizing.
 - Offer paid catalog once at the end — "When you're ready for more, just ask."
 
-## Business Context
+## Product Context
 
-- PA2.3 in the Setness Consulting business plan
-- Full plan: `../03-business/project-setness-consulting/business/PLAN_PA2.3_CONTEXT_FILE_BUILDER_PRO.md`
+- Setness Consulting product for building AI context files
+- This repository is the product source of truth; sibling business-plan files are not required
 - Free tier: no email gate, no strings — pure value
 - Paid tier: 60+ files across 14 categories, cataloged, deferred to future batches
 
 ## Last Updated
 
-2026-08-06 — Project scaffolded. Free tier implemented. Paid catalog created.
+2026-08-18 — Removed sibling-repo plan path. Canonical sources live in README.md.

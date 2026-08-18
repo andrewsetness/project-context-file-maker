@@ -3,8 +3,9 @@
 This is the complete catalog of paid tier context files (60+ files across 14 categories). These are cataloged and ready for implementation in future batches. Each category maps to real file patterns used across Andrew Setness's 15+ Cursor projects and/or recognized open standards in the AGENTS.md ecosystem, Soul Protocol/Soul Memory, agent-soul frameworks, and cross-tool adapter landscape.
 
 **Status:** Cataloged. Not yet implemented.
-**Pricing:** $29 one-time / $49 annual
-**Business plan:** `../03-business/project-setness-consulting/business/PLAN_PA2.3_CONTEXT_FILE_BUILDER_PRO.md`
+**Pricing:** $29 one-time / $49 annual (proposed; not a published offer)
+
+Implementation requirements for any catalog entry are defined in `docs/DATA-CONTRACT.md`. This file is a catalog only.
 
 ---
 

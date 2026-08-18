@@ -30,7 +30,8 @@ For the free tier:
 2. `schemas/*_answers.schema.json` defines the machine-readable answer contract: field names, required fields, and types.
 3. `templates/free/*.md` defines deterministic output structure.
 4. `scripts/generate.py` validates structured answers against the checked-in schema contract before rendering.
-5. The generated markdown at the **user-selected destination** is the user's artifact.
+5. `scripts/validate.py` checks that schemas, questionnaires, templates, and synthetic fixtures agree. CI runs this with `--strict`.
+6. The generated markdown at the **user-selected destination** is the user's artifact.
 
 If these layers disagree, fix the disagreement. Do not silently coerce or invent missing user facts.
 
