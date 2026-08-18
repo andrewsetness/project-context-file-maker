@@ -48,9 +48,7 @@ class TestEndToEndGeneration:
         for key, value in about_me_answers.items():
             if value is None or key in ('preferred_name',):
                 continue
-            # The value or a reasonable substring should appear
             if isinstance(value, str) and len(value) > 3:
-                # Check at least the first 20 chars appear
                 snippet = value[:20]
                 assert snippet in result, f"Value for '{key}' not found: '{snippet}'"
 
@@ -144,11 +142,11 @@ class TestSchemaValidation:
 class TestCLIInterface:
     """Test the CLI generate tool."""
 
-    def test_generate_about_me_stdout(self, tmp_path, about_me_answers, capsys):
+    def test_generate_about_me_stdout(self, tmp_path, about_me_answers):
         import subprocess
 
         answers_file = tmp_path / 'answers.json'
-        answers_file.write_text(json.dumps(about_me_answers))
+        answers_file.write_text(json.dumps(about_me_answers), encoding='utf-8')
 
         result = subprocess.run(
             [sys.executable, str(SCRIPTS_DIR / 'generate.py'),
@@ -156,13 +154,13 @@ class TestCLIInterface:
             capture_output=True, text=True
         )
         assert result.returncode == 0
-        assert 'Andrew Setness' in result.stdout
+        assert about_me_answers['full_name'] in result.stdout
 
     def test_generate_to_file(self, tmp_path, about_me_answers):
         import subprocess
 
         answers_file = tmp_path / 'answers.json'
-        answers_file.write_text(json.dumps(about_me_answers))
+        answers_file.write_text(json.dumps(about_me_answers), encoding='utf-8')
         output_file = tmp_path / 'output.md'
 
         result = subprocess.run(
@@ -173,15 +171,15 @@ class TestCLIInterface:
         assert result.returncode == 0
         assert output_file.exists()
         content = output_file.read_text(encoding='utf-8')
-        assert 'Andrew Setness' in content
+        assert about_me_answers['full_name'] in content
 
     def test_generate_both_files(self, tmp_path, about_me_answers, ai_preferences_answers):
         import subprocess
 
         about_file = tmp_path / 'about.json'
         prefs_file = tmp_path / 'prefs.json'
-        about_file.write_text(json.dumps(about_me_answers))
-        prefs_file.write_text(json.dumps(ai_preferences_answers))
+        about_file.write_text(json.dumps(about_me_answers), encoding='utf-8')
+        prefs_file.write_text(json.dumps(ai_preferences_answers), encoding='utf-8')
         outdir = tmp_path / 'output'
         outdir.mkdir()
 
@@ -218,6 +216,7 @@ class TestFileIntegrity:
         'templates/free/ai_preferences.md',
         'templates/paid/CATALOG.md',
         'docs/README.md',
+        'docs/DATA-CONTRACT.md',
         'docs/questionnaires/about_me_questions.md',
         'docs/questionnaires/ai_preferences_questions.md',
         'Context/MEMORY.md',
