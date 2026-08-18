@@ -1,77 +1,125 @@
 # Context File Maker
 
-An interactive agent that interviews users and generates structured AI context files — starting with the free tier: `about_me.md` and `ai_preferences.md`.
+An interview-and-generation toolkit for structured AI context files, starting with the free-tier `about_me.md` and `ai_preferences.md`.
 
-**Status:** v0.1 — Free tier implemented. Paid tier catalog ready for future batches.
+**Status:** v0.1.2 — free-tier templates, schemas, deterministic generator, and validation tests implemented. Cursor interview flow still needs an end-to-end product test. Paid-tier catalog is future scope.  
 **Repo:** `andrewsetness/project-context-file-maker`
-**Plan:** `../03-business/project-setness-consulting/business/PLAN_PA2.3_CONTEXT_FILE_BUILDER_PRO.md`
 
-## Quick Start
+## Mental model
 
-1. Open this workspace in Cursor
-2. Say: `build my context files` or `create an about me file`
-3. The agent interviews you and generates the files
-4. Files appear in `output-examples/` — copy `about_me.md` and `ai_preferences.md` to any project
+There are two distinct layers:
 
-## What This Agent Does
+1. **Interview layer** — an agent asks the questionnaire and produces structured answers.
+2. **Generator layer** — `scripts/generate.py` validates answer JSON against `schemas/`, then deterministically renders `templates/free/`.
 
-The Context File Maker agent conducts a structured interview across multiple phases, then generates polished markdown context files that AI assistants (Cursor, Claude Code, Copilot, Windsurf, etc.) use to understand you and your preferences.
+The CLI is not itself an autonomous interview engine. See [`docs/DATA-CONTRACT.md`](docs/DATA-CONTRACT.md) for the full source-of-truth, privacy, and output contract.
 
-### Free Tier (Implemented)
-
-| File | Purpose | Interview Time |
-|------|---------|---------------|
-| `about_me.md` | Identity, role, tech stack, goals, pain points | ~3 min |
-| `ai_preferences.md` | Tone, verbosity, code style, constraints, pet peeves | ~2 min |
-
-### Paid Tier (Cataloged — Future Batches)
-
-60+ context files across 14 categories. See `templates/paid/CATALOG.md` for the full catalog. See `../03-business/project-setness-consulting/business/PLAN_PA2.3_CONTEXT_FILE_BUILDER_PRO.md` for the full business plan.
-
-## Required Reading
-
-1. `SOUL.md` — Identity and operating contract
-2. `AGENTS.md` — Agent guidance
-3. `HANDOFF.md` — State and workspace handoff
-4. `STATUS.md` — Current state and open items
-5. `JOBS_TO_BE_DONE.md` — Operating scorecard
-6. `ARCHITECTURE.md` — System design and data flow
-7. `PRD.md` — Full behavioral specification
-8. `.cursor/skills/context-file-maker/SKILL.md` — Execution sequence
-9. `agents/context-file-maker-agent.md` — Agent system prompt
-
-## Project Structure
-
+```mermaid
+flowchart LR
+    U[User] --> I[Interview layer]
+    Q[Question bank] --> I
+    I --> A[Answer JSON]
+    S[JSON Schema] --> V[Validation]
+    A --> V
+    V --> T[Template renderer]
+    M[Markdown template] --> T
+    T --> O[User-selected output]
 ```
+
+## Quick start
+
+### Cursor interview path
+
+1. Open the project workspace.
+2. Read `STATUS.md` and `docs/DATA-CONTRACT.md`.
+3. Say `build my context files` or `create an about me file`.
+4. Keep real interview answers and generated profiles in a private/user-owned destination, **not** in `output-examples/` or `tests/fixtures/`.
+
+The Cursor interview flow is implemented as prompts/skills but is still an open end-to-end validation item; do not treat the CLI tests as proof that the conversational UX has been validated.
+
+### Deterministic CLI path
+
+```powershell
+python scripts/generate.py about_me --answers C:\private\about_me.json --output C:\private\about_me.md
+python scripts/generate.py ai_preferences --answers C:\private\prefs.json --output C:\private\ai_preferences.md
+python scripts/generate.py all --about C:\private\about_me.json --prefs C:\private\prefs.json --outdir C:\private\context
+```
+
+Without `--output`, a single-file command prints to stdout. The generator does not silently write personal data into the repository.
+
+Invalid payloads fail before output is written when required fields are missing or known fields have the wrong type.
+
+## Free tier
+
+| File | Purpose | Interview target |
+|---|---|---|
+| `about_me.md` | Identity, role, stack, goals, work context | ~3 min |
+| `ai_preferences.md` | Tone, code/work style, constraints, pet peeves | ~2 min |
+
+The time figures are design targets, not measured usability claims until the Cursor interview is tested with users.
+
+## Contract ownership
+
+| Concern | Source of truth |
+|---|---|
+| What questions are asked | `docs/questionnaires/*.md` |
+| Structured field names/types/required fields | `schemas/*_answers.schema.json` |
+| Markdown output structure | `templates/free/*.md` |
+| Runtime validation + generation | `scripts/generate.py` |
+| Template/question/example consistency | `scripts/validate.py` + tests |
+| Privacy/output/example rules | `docs/DATA-CONTRACT.md` |
+| Current implementation state | `STATUS.md` |
+
+If these disagree, fix the disagreement. Do not invent or silently coerce user facts.
+
+## Tracked examples are synthetic
+
+`output-examples/` and `tests/fixtures/` are public-safe demonstration/test data only. They must never contain a real user's profile, employer facts, private goals, credentials, or account data.
+
+The examples are **not an output directory**. User-generated context files belong at the path the user explicitly selects.
+
+## Paid tier
+
+The catalog contains 60+ proposed context files across 14 categories under `templates/paid/CATALOG.md`. They are catalog/design scope only until each file type has a questionnaire, schema, template, generator routing, synthetic fixtures, tests, and example output as required by the data contract.
+
+## Required reading
+
+For contributors, read in this order:
+
+1. `STATUS.md` — what is actually implemented now
+2. `docs/DATA-CONTRACT.md` — data flow, privacy, and authority
+3. `ARCHITECTURE.md` — broader design
+4. `AGENTS.md` — contributor/agent rules
+5. `.cursor/skills/context-file-maker/SKILL.md` — conversational execution sequence
+6. `PRD.md` — intended behavior and future scope
+
+Historical session detail belongs in `CHANGELOG.md`/`HANDOFF.md`, not in the current-state contract.
+
+## Project structure
+
+```text
 project-context-file-maker/
-├── README.md                              # This file
-├── SOUL.md                                # Identity and operating contract
-├── AGENTS.md                              # Agent guidance
-├── HANDOFF.md                             # Session handoff
-├── STATUS.md                              # Current state
-├── JOBS_TO_BE_DONE.md                     # Operating scorecard
-├── ARCHITECTURE.md                        # System design
-├── SKILL.md                               # Agent skill definition
-├── PRD.md                                 # Full behavioral spec
-├── .cursor/
-│   ├── rules/context-file-maker-core.mdc   # Cursor rule (auto-loads SOUL.md)
-│   └── skills/context-file-maker/SKILL.md  # Execution protocol
-├── Context/
-│   └── MEMORY.md                           # Durable agent memory
-├── agents/
-│   └── context-file-maker-agent.md         # LLM system prompt
-├── templates/
-│   ├── free/                               # Free tier templates
-│   │   ├── about_me.md
-│   │   └── ai_preferences.md
-│   └── paid/
-│       └── CATALOG.md                      # Full paid tier catalog
+├── README.md
+├── STATUS.md
+├── ARCHITECTURE.md
+├── schemas/                       # machine-readable answer contracts
+├── templates/free/                # deterministic markdown templates
 ├── docs/
-│   ├── README.md                           # Docs index
-│   └── questionnaires/                     # Full question banks
-│       ├── about_me_questions.md
-│       └── ai_preferences_questions.md
-└── output-examples/                        # Example generated outputs
-    ├── about_me_example.md
-    └── ai_preferences_example.md
+│   ├── DATA-CONTRACT.md           # authority, privacy, output lifecycle
+│   └── questionnaires/            # interview question banks
+├── scripts/
+│   ├── generate.py                # validate JSON → render markdown
+│   ├── template_engine.py
+│   └── validate.py
+├── tests/                         # synthetic fixtures + regression tests
+└── output-examples/               # synthetic examples only; never user output
 ```
+
+## Verification
+
+```powershell
+python -m pytest -q
+python scripts/validate.py --strict
+```
+
+Do not claim the Cursor interview UX is validated merely because the deterministic generator/tests pass.
