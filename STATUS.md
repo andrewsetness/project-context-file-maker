@@ -2,7 +2,7 @@
 
 - **Purpose:** Interview-and-generation toolkit for AI context files.
 - **Overall Status:** v0.1.3 — deterministic free-tier generation implemented; conversational Cursor interview still needs an end-to-end product test.
-- **Last Updated:** 2026-08-18
+- **Last Updated:** 2026-08-19
 - **Blocker:** None for CLI generation; do not expand paid-tier scope before the free interview path is validated.
 
 ## Current runtime
@@ -34,6 +34,8 @@ Not yet proven:
 
 The generator validates structured JSON and renders deterministic templates. It does not infer missing required facts from conversation history.
 
+Current tracked files are synthetic. Git history predating the 2026-08-18 fixture cleanup has not been rewritten; deciding whether that historical personal-looking fixture material warrants a destructive history purge is an explicit owner/privacy decision.
+
 ## Recent remediation — 2026-08-18
 
 - Added `docs/DATA-CONTRACT.md` defining question → answer JSON → schema validation → template → explicit output flow.
@@ -51,6 +53,7 @@ The generator validates structured JSON and renders deterministic templates. It 
 - [ ] Decide whether interview answer JSON should have a supported local resume format; if so, define its ignored/private storage lifecycle first.
 - [ ] Reconcile `profile.yaml` / cross-agent discovery only if this agent is intentionally promoted into the shared portfolio runtime.
 - [ ] Decide which paid category to implement **after** the free-tier interview path is proven.
+- [ ] **Owner/privacy decision:** decide whether to rewrite Git history to purge the pre-2026-08-18 personal-looking fixture history. Do not rewrite history implicitly; current tracked fixtures/examples are already synthetic.
 - [ ] **Owner decision:** choose a license and, if desired, a GitHub Release process. Do not invent either.
 
 ## Definition of done for the free tier
