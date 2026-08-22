@@ -39,4 +39,5 @@ See `README.md` for the full source map. Do not treat this list as a second spec
 
 ## Last Updated
 
+2026-08-22 — Reconciliation completed on `reconcile-v021` (pushed to GitHub); schema enforcement is unconditional per DATA-CONTRACT; 129 tests + `validate.py --strict` green. Owner decision pending: fold reconcile-v021 into master.
 2026-08-18 — Removed sibling-repo plan path. Canonical sources live in README.md.

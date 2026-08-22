@@ -1,9 +1,9 @@
 # STATUS — Context File Maker
 
 - **Purpose:** Interview-and-generation toolkit for AI context files.
-- **Overall Status:** v0.2.1 — deterministic free-tier generation with polished template output, hardened CLI, schema/question-bank validation, 121-test suite, and CI. Conversational Cursor interview still needs an end-to-end product test.
+- **Overall Status:** v0.2.1 — deterministic free-tier generation with polished template output, hardened CLI, schema/question-bank validation, 129-test suite, and CI. Conversational Cursor interview still needs an end-to-end product test. Reconciliation of local v0.2.x with origin/master completed on `reconcile-v021` (pushed).
 - **Last Updated:** 2026-08-22
-- **Blocker:** None for CLI generation; do not expand paid-tier scope before the free interview path is validated.
+- **Blocker:** None for CLI generation; do not expand paid-tier scope before the free interview path is validated. Owner decision pending: fold `reconcile-v021` into `master`.
 
 ## Current runtime
 
@@ -17,7 +17,7 @@
 - Interviewer checklist (`scripts/checklist.py`) — question-bank checklists, missing-field flags
 - Shared CLI config (`scripts/common.py`) + `requirements-dev.txt`
 - GitHub Actions quality gate (pytest + `validate.py --strict`)
-- Unit/integration/regression tests (121), including invalid-payload rejection
+- Unit/integration/regression tests (129), including invalid-payload rejection
 - Synthetic full/minimal test fixtures
 - Synthetic example outputs under `output-examples/`
 - Data/privacy/output contract: `docs/DATA-CONTRACT.md`
@@ -43,10 +43,11 @@ Current tracked files are synthetic. Git history predating the 2026-08-18 fixtur
 - 2026-08-08 v0.2: Product polish pass. `{{~field}}` / `{{#any:...}}` template syntax, line-aware conditional removal, CLI flags (`--validate`/`--json`/`--force`/`--verbose`), checklist tool, drift-guarded example outputs, 106 tests.
 - 2026-08-18 v0.1.3 (remote line): Self-contained clone, DATA-CONTRACT.md, schema-enforced generation, synthetic fixtures replacing personal data, CI quality gate.
 - 2026-08-22 v0.2.1: Maintenance pass — stderr diagnostics routing, inline any-block support, deterministic field ordering, fail-closed schema validation, jsonschema-independent typo detection, schema↔question-bank cross-check, shared config dedupe, docs path fixes, 121 tests.
-- 2026-08-22 reconciliation: The two divergent lines (local v0.2.x and remote v0.1.3) were reconciled per owner decision (Option A: rebase local onto origin/master). Remote's CI/synthetic fixtures/DATA-CONTRACT kept as base; v0.2 feature set re-applied on top.
+- 2026-08-22 reconciliation: The two divergent lines (local v0.2.x and remote v0.1.3) were reconciled per owner decision (Option A: rebase local onto origin/master). Remote's CI/synthetic fixtures/DATA-CONTRACT kept as base; v0.2 feature set re-applied on top. Completed on `reconcile-v021` (tip `f7ef557`, pushed to GitHub); schema enforcement now unconditional per DATA-CONTRACT, 129 tests passing, `validate.py --strict` clean.
 
 ## Open Items
 
+- [ ] **Owner decision:** fold `reconcile-v021` into `master` (fast-forward master to `f7ef557`, delete branch) or keep `reconcile-v021` as the working line. `master` is still the pre-rebase v0.2 line.
 - [ ] Test the free-tier conversational interview end-to-end in Cursor, including explicit output destination and cancellation/resume behavior.
 - [ ] Measure the actual interview time before presenting the ~3 min / ~2 min figures as validated user-facing claims.
 - [ ] Decide whether interview answer JSON should have a supported local resume format; if so, define its ignored/private storage lifecycle first.
