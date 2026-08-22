@@ -6,7 +6,7 @@ tags: [git, rebase, reconciliation, testing, api-drift]
 source: opencode-session
 created: 2026-08-22
 last_updated: 2026-08-22
-promoted_to_obsidian: false
+promoted_to_obsidian: true
 ---
 
 ## Context
