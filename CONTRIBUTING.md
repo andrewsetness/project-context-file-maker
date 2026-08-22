@@ -15,13 +15,16 @@ Every change should keep these 7 root documents current:
 
 ## Development Setup
 
+Requires **Python 3.9+**.
+
 ```bash
 # Clone the repo
 git clone https://github.com/andrewsetness/project-context-file-maker.git
 
 # Install test dependencies (jsonschema is used by fixture tests;
 # scripts/generate.py itself is dependency-free)
-pip install pytest jsonschema
+pip install -r requirements-dev.txt
+# (equivalent: pip install pytest jsonschema)
 
 # Run tests
 python -m pytest tests/ -v

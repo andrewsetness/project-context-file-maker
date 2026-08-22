@@ -5,15 +5,41 @@ All notable changes to the Context File Maker project.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.3] — 2026-08-18
+## [0.2.1] — 2026-08-22
 
-### Changed
-- Public clone is self-contained: removed unpublished sibling-repo plan paths and named canonical spec files in README.
-- Documented license and GitHub Release process as an unresolved owner decision.
+### Fixed
+- CLI: `--verbose` diagnostics (optional-field notes, unknown-field warnings)
+  now go to **stderr** — redirecting stdout (`> file.md`) no longer corrupts
+  the generated markdown
+- CLI: missing optional fields are listed in sorted (deterministic) order
+- CLI: a corrupt answer-schema JSON now fails validation (`--validate`)
+  instead of silently skipping it
+- CLI: unknown-answer-field typo warnings work even when `jsonschema` is not
+  installed; non-object JSON payloads fail with a clear error instead of a
+  traceback; `--json --output` writes the JSON payload to the file instead of
+  silently ignoring `--output`
+- Engine: inline (same-line) `{{#any:f1,f2}}...{{/any}}` blocks no longer leak
+  raw syntax into output
+- Engine: list/tuple values render as comma-separated text instead of Python
+  repr; empty collections count as "no value" for conditionals
+- Docs: corrected 8 broken business-plan path references across README,
+  AGENTS, HANDOFF, PRD, docs/README, Context/MEMORY, and paid CATALOG;
+  fixed stale test counts in STATUS/HANDOFF; removed stale "(v0.1)" label in
+  PRD Out of Scope
+- Config: fixed broken paths in `profile.yaml` (workspace, soul, tier1 user
+  file) so they resolve relative to the project root
 
 ### Added
-- `scripts/validate.py` now checks JSON Schema contracts against question banks, templates, and fixtures.
-- Regression tests for sibling-local path leakage and schema-contract mismatches.
+- Validator: schema↔question-bank cross-check — warns when an asked field is
+  missing from its answer schema or a schema field has no question
+- `scripts/common.py`: single source for optional-interview-field lists and
+  Windows console setup (deduplicated from generate.py/checklist.py)
+- `requirements-dev.txt` documenting test dependencies and Python 3.9+ floor
+- Tests: +15 (stderr routing, deterministic ordering, inline any-blocks,
+  list rendering, schema/question-bank mapping, fail-closed schemas,
+  jsonschema-independent typo detection, `--json --output`, non-object
+  payload rejection); jsonschema-dependent tests now skip gracefully when the
+  library is absent (121 total)
 
 ## [0.2.0] — 2026-08-08
 
@@ -45,7 +71,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   section headers
 - Empty optional sections (`## Personal`, `## Pet Peeves & Non-Negotiables`)
   are now omitted instead of rendering as blank headers
->>>>>>> 65900d6 (feat(v0.2): product polish pass — template engine, CLI, validator, checklist)
+
+## [0.1.3] — 2026-08-18
+
+### Changed
+- Public clone is self-contained: removed unpublished sibling-repo plan paths and named canonical spec files in README.
+- Documented license and GitHub Release process as an unresolved owner decision.
+
+### Added
+- `scripts/validate.py` now checks JSON Schema contracts against question banks, templates, and fixtures.
+- Regression tests for sibling-local path leakage and schema-contract mismatches.
 
 ## [0.1.0] — 2026-08-06
 

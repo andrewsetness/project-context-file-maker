@@ -14,6 +14,13 @@ Supported syntax:
 
 Block tags that sit alone on their own line are removed cleanly so a removed
 block never leaves a stray blank line (which would break markdown lists).
+Inline (same-line) {{#field}} and {{#any:...}} blocks are also supported.
+
+Known limitations:
+    - Nesting two blocks of the SAME name inline (e.g. {{#a}}{{#a}}...{{/a}}
+      ...{{/a}}) is not supported; same-name nesting only works when the outer
+      block is line-isolated. Different names nest fine.
+    - List/tuple values are rendered as comma-separated text.
 
 Usage:
     from template_engine import fill_template
@@ -42,6 +49,10 @@ _SECTION_LINE_RE = re.compile(
 # Inline conditional blocks ({{#x}}...{{/x}} inside a line).
 _SECTION_INLINE_RE = re.compile(r'\{\{#(\w+)\}\}(.*?)\{\{/\1\}\}', re.DOTALL)
 
+# Inline any-sections ({{#any:f1,f2}}...{{/any}} inside a line). The
+# line-isolated form is matched first; this catches whatever remains.
+_ANY_INLINE_RE = re.compile(r'\{\{#any:([\w,]+)\}\}(.*?)\{\{/any\}\}', re.DOTALL)
+
 _SIMPLE_RE = re.compile(r'\{\{(\w+)\}\}')
 _MISSING_RE = re.compile(r'\{\{~(\w+)\}\}')
 _ANY_OPEN_RE = re.compile(r'\{\{#any:([\w,]+)\}\}')
@@ -69,7 +80,21 @@ def fill_template(template: str, data: Dict[str, Any]) -> str:
 def _field_has_value(data: Dict[str, Any], field: str) -> bool:
     """Return True if the field exists, is not None, and is non-empty."""
     value = data.get(field)
-    return value is not None and str(value).strip() != ''
+    if value is None:
+        return False
+    if isinstance(value, (list, tuple, set, dict)):
+        return len(value) > 0
+    return str(value).strip() != ''
+
+
+def _render_value(value: Any) -> str:
+    """Render a data value as text. Lists/tuples become comma-separated
+    strings instead of Python repr; None becomes ''."""
+    if value is None:
+        return ''
+    if isinstance(value, (list, tuple)):
+        return ', '.join(str(item) for item in value)
+    return str(value)
 
 
 def _strip_one_leading_newline(content: str) -> str:
@@ -93,7 +118,8 @@ def _process_any_sections(template: str, data: Dict[str, Any]) -> str:
             return _strip_one_leading_newline(content)
         return ''
 
-    return _ANY_LINE_RE.sub(replacer, template)
+    result = _ANY_LINE_RE.sub(replacer, template)
+    return _ANY_INLINE_RE.sub(replacer, result)
 
 
 def _process_conditionals(template: str, data: Dict[str, Any]) -> str:
@@ -117,7 +143,7 @@ def _replace_missing_fields(template: str, data: Dict[str, Any]) -> str:
     def replacer(match: re.Match) -> str:
         field = match.group(1)
         if _field_has_value(data, field):
-            return str(data[field])
+            return _render_value(data[field])
         return NOT_PROVIDED
 
     return _MISSING_RE.sub(replacer, template)
@@ -126,11 +152,7 @@ def _replace_missing_fields(template: str, data: Dict[str, Any]) -> str:
 def _replace_simple_fields(template: str, data: Dict[str, Any]) -> str:
     """Replace {{field}} with data values."""
     def replacer(match: re.Match) -> str:
-        field = match.group(1)
-        value = data.get(field, '')
-        if value is None:
-            return ''
-        return str(value)
+        return _render_value(data.get(match.group(1)))
 
     return _SIMPLE_RE.sub(replacer, template)
 

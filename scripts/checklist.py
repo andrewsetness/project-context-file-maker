@@ -20,35 +20,13 @@ import re
 import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
-
-def _reconfigure_console():
-    """Best-effort UTF-8 console output on Windows (CP1252 consoles mangle
-    em-dashes and other non-ASCII characters in printed output)."""
-    if sys.platform == 'win32':
-        try:
-            import io
-            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
-        except Exception:
-            pass
+# Add scripts directory to path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from common import OPTIONAL_FIELDS, PROJECT_ROOT, reconfigure_console
 
 QUESTION_BANKS = {
     'about_me': PROJECT_ROOT / 'docs' / 'questionnaires' / 'about_me_questions.md',
     'ai_preferences': PROJECT_ROOT / 'docs' / 'questionnaires' / 'ai_preferences_questions.md',
-}
-
-# Fields the agent treats as optional during the interview.
-OPTIONAL_FIELDS = {
-    'about_me': {
-        'preferred_name', 'ai_pain_points', 'favorite_tools', 'tools_avoid',
-        'hobbies', 'fun_fact',
-    },
-    'ai_preferences': {
-        'stack_preferences', 'no_touch_files', 'pet_peeves',
-        'past_frustrations', 'must_haves', 'never_do',
-    },
 }
 
 
@@ -109,7 +87,7 @@ def render_checklist(name: str, answers: dict = None) -> None:
 
 
 def main():
-    _reconfigure_console()
+    reconfigure_console()
 
     parser = argparse.ArgumentParser(description='Render an interview checklist')
     parser.add_argument('file', nargs='?', choices=['about_me', 'ai_preferences', 'all'],

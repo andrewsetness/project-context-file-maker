@@ -9,14 +9,6 @@ Tests that the validator correctly:
 """
 
 import json
-import sys
-from pathlib import Path
-
-import pytest
-
-# Add scripts directory to path
-SCRIPTS_DIR = Path(__file__).resolve().parent.parent / 'scripts'
-sys.path.insert(0, str(SCRIPTS_DIR))
 
 from validate import Validator
 
@@ -133,6 +125,69 @@ class TestPlaceholderFieldMapping:
         validator.validate_placeholder_field_mapping(template, qb)
         assert len(validator.warnings) >= 1
         assert any('tagline' in str(w) for w in validator.warnings)
+
+
+class TestSchemaQuestionMapping:
+    """Test the answer-schema vs question-bank consistency check."""
+
+    def _write_qb(self, path, fields):
+        rows = '\n'.join(
+            f"| {i} | {f} | Question {i}? |" for i, f in enumerate(fields, 1))
+        path.write_text(f"# Questions\n| # | Field | Question |\n|---|-------|----------|\n{rows}\n",
+                        encoding='utf-8')
+
+    def test_mismatch_warns_both_directions(self, tmp_path):
+        qb = tmp_path / 'questions.md'
+        self._write_qb(qb, ['asked_field', 'not_in_schema'])
+
+        schema = tmp_path / 'answers.schema.json'
+        schema.write_text(json.dumps({
+            'type': 'object',
+            'properties': {
+                'asked_field': {'type': 'string'},
+                'schema_only': {'type': 'string'},
+            },
+        }), encoding='utf-8')
+
+        validator = Validator(root=tmp_path)
+        validator.validate_schema_question_mapping(schema, qb)
+        assert any("'not_in_schema'" in str(w) for w in validator.warnings)
+        assert any("'schema_only'" in str(w) for w in validator.warnings)
+
+    def test_matching_fields_pass(self, tmp_path):
+        qb = tmp_path / 'questions.md'
+        self._write_qb(qb, ['name'])
+
+        schema = tmp_path / 'answers.schema.json'
+        schema.write_text(json.dumps({
+            'type': 'object',
+            'properties': {'name': {'type': 'string'}},
+        }), encoding='utf-8')
+
+        validator = Validator(root=tmp_path)
+        validator.validate_schema_question_mapping(schema, qb)
+        assert len(validator.warnings) == 0
+
+    def test_broken_schema_is_an_error(self, tmp_path):
+        qb = tmp_path / 'questions.md'
+        self._write_qb(qb, ['name'])
+        schema = tmp_path / 'broken.schema.json'
+        schema.write_text('{nope', encoding='utf-8')
+
+        validator = Validator(root=tmp_path)
+        validator.extract_schema_fields(schema)
+        assert len(validator.errors) == 1
+
+    def test_real_project_schemas_match_question_banks(self, project_root):
+        """Both real schemas cover exactly the fields their banks ask."""
+        validator = Validator(root=project_root)
+        for name in ('about_me', 'ai_preferences'):
+            validator.validate_schema_question_mapping(
+                project_root / 'schemas' / f'{name}_answers.schema.json',
+                project_root / 'docs' / 'questionnaires' / f'{name}_questions.md',
+            )
+        assert len(validator.warnings) == 0, \
+            f"Schema/question-bank drift: {[str(w) for w in validator.warnings]}"
 
 
 class TestRealProjectValidation:

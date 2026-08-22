@@ -9,7 +9,7 @@ Tests that the template engine correctly:
   - Handles edge cases (empty templates, missing fields, None values)
 """
 
-import pytest
+import re
 
 from template_engine import fill_template, extract_placeholders
 
@@ -231,6 +231,38 @@ class TestAnySections:
         assert "Before\n\nAfter" in result or "Before\nAfter" in result
 
 
+class TestInlineAnySections:
+    """Inline (same-line) {{#any:...}} blocks must not leak raw syntax."""
+
+    def test_inline_any_true_keeps_block(self):
+        template = "Intro: {{#any:a,b}}inline {{a}}{{/any}} end"
+        result = fill_template(template, {"a": "X"})
+        assert result == "Intro: inline X end\n"
+
+    def test_inline_any_false_removes_block_without_leaving_syntax(self):
+        template = "Intro: {{#any:a,b}}inline {{a}}{{/any}} end"
+        result = fill_template(template, {"a": "", "b": None})
+        assert "{{#any" not in result
+        assert "{{/any}}" not in result
+        assert result.startswith("Intro:")
+
+
+class TestListValueRendering:
+    """List/tuple values render as readable text, never Python repr."""
+
+    def test_list_renders_comma_separated(self):
+        result = fill_template("Items: {{items}}", {"items": ["x", "y"]})
+        assert result == "Items: x, y\n"
+
+    def test_list_in_missing_placeholder(self):
+        result = fill_template("Tools: {{~tools}}", {"tools": ["a", "b", "c"]})
+        assert "Tools: a, b, c" in result
+
+    def test_empty_list_is_treated_as_no_value_for_conditionals(self):
+        result = fill_template("{{#items}}Has items{{/items}}", {"items": []})
+        assert "Has items" not in result
+
+
 class TestLineIsolatedConditionals:
     """Conditional blocks that sit alone on their own lines should be removed
     without leaving a blank line."""
@@ -320,7 +352,6 @@ class TestSectionGatesInRealTemplates:
         about_result = fill_template(about_me_template, about_me_answers)
         prefs_result = fill_template(ai_preferences_template, ai_preferences_answers)
 
-        import re
         about_matches = re.findall(r'\{\{.*?\}\}', about_result)
         prefs_matches = re.findall(r'\{\{.*?\}\}', prefs_result)
 

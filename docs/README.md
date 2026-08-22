@@ -49,6 +49,14 @@ This repository is self-contained. Start with the canonical-source table in `../
 | Tool | Path | Purpose |
 |------|------|---------|
 | Template Engine | `../scripts/template_engine.py` | Mustache-style template filling (`{{field}}`, `{{~field}}`, `{{#field}}`, `{{#any:...}}`) |
-| Validator | `../scripts/validate.py` | Template/question-bank consistency checks |
-| CLI Generator | `../scripts/generate.py` | JSON answers → markdown context files |
+| Validator | `../scripts/validate.py` | Template/question-bank consistency checks, schema/question-bank cross-check, example drift guard |
+| CLI Generator | `../scripts/generate.py` | JSON answers → markdown context files (`--validate`, `--json`, `--force`, `--verbose`) |
+| Interview Checklist | `../scripts/checklist.py` | Renders question-bank checklists; flags missing fields from partial answers |
+| Shared CLI Config | `../scripts/common.py` | Single source for optional-field lists and Windows console setup |
 | Answer Schemas | `../schemas/` | JSON schema validation for answer payloads |
+
+## Dev Setup
+
+| File | Path | Purpose |
+|------|------|---------|
+| Test dependencies | `../requirements-dev.txt` | `pip install -r requirements-dev.txt` (pytest, jsonschema) |

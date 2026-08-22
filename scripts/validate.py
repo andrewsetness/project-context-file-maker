@@ -2,10 +2,11 @@
 """
 Context File Maker — Validator
 
-Checks template-question bank consistency:
+Checks template-question bank-schema consistency:
   - All question bank fields have corresponding template placeholders
   - All template placeholders have corresponding question bank fields
   - Templates have valid syntax
+  - Answer schemas cover exactly the fields the question banks ask
   - Example outputs are consistent with templates
 
 Usage:
@@ -17,7 +18,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import List, Optional, Set
 
 # Reuse the engine's tokenizer so validation can't drift from what the
 # engine actually understands.
@@ -39,7 +40,7 @@ class ValidationError:
 
 
 class Validator:
-    def __init__(self, root: Path = None):
+    def __init__(self, root: Optional[Path] = None):
         self.root = root or PROJECT_ROOT
         self.errors: List[ValidationError] = []
         self.warnings: List[ValidationError] = []
@@ -100,6 +101,35 @@ class Validator:
                 fields.add(match.group(1))
 
         return fields
+
+    def extract_schema_fields(self, schema_path: Path) -> Set[str]:
+        """Extract property names from an answer JSON schema."""
+        try:
+            schema = json.loads(schema_path.read_text(encoding='utf-8'))
+        except (json.JSONDecodeError, OSError):
+            self.error(str(schema_path.relative_to(self.root)),
+                       "Could not read/parse schema file")
+            return set()
+        return set(schema.get('properties', {}).keys())
+
+    def validate_schema_question_mapping(self, schema_path: Path,
+                                         question_bank_path: Path):
+        """Check that every asked field exists in the schema and vice versa."""
+        schema_fields = self.extract_schema_fields(schema_path)
+        if not schema_fields:
+            return
+        fields = self.extract_question_fields(question_bank_path)
+
+        rel_s = schema_path.relative_to(self.root)
+        rel_q = question_bank_path.relative_to(self.root)
+
+        for field in sorted(fields - schema_fields):
+            self.warn(str(rel_s),
+                      f"Question field '{field}' (from {rel_q.name}) is missing "
+                      f"from the answer schema")
+        for field in sorted(schema_fields - fields):
+            self.warn(str(rel_s),
+                      f"Schema field '{field}' has no question in {rel_q.name}")
 
     def validate_placeholder_field_mapping(
         self, template_path: Path, question_bank_path: Path
@@ -166,13 +196,16 @@ class Validator:
         """Run all validations. Returns True if no errors."""
         # Templates and their question banks
         mappings = [
-            ('templates/free/about_me.md', 'docs/questionnaires/about_me_questions.md'),
-            ('templates/free/ai_preferences.md', 'docs/questionnaires/ai_preferences_questions.md'),
+            ('templates/free/about_me.md', 'docs/questionnaires/about_me_questions.md',
+             'schemas/about_me_answers.schema.json'),
+            ('templates/free/ai_preferences.md', 'docs/questionnaires/ai_preferences_questions.md',
+             'schemas/ai_preferences_answers.schema.json'),
         ]
 
-        for template_rel, question_rel in mappings:
+        for template_rel, question_rel, schema_rel in mappings:
             template_path = self.root / template_rel
             question_path = self.root / question_rel
+            schema_path = self.root / schema_rel
 
             if not template_path.exists():
                 self.error(template_rel, "Template file not found")
@@ -182,6 +215,11 @@ class Validator:
                 continue
 
             self.validate_placeholder_field_mapping(template_path, question_path)
+
+            if schema_path.exists():
+                self.validate_schema_question_mapping(schema_path, question_path)
+            else:
+                self.error(schema_rel, "Schema file not found")
 
         # Check example outputs
         if check_examples:

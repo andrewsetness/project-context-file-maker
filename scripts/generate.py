@@ -24,10 +24,8 @@ from pathlib import Path
 
 # Add scripts directory to path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from common import OPTIONAL_FIELDS, PROJECT_ROOT, reconfigure_console
 from template_engine import fill_template
-
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 TEMPLATES = {
     'about_me': PROJECT_ROOT / 'templates' / 'free' / 'about_me.md',
@@ -39,46 +37,27 @@ SCHEMAS = {
     'ai_preferences': PROJECT_ROOT / 'schemas' / 'ai_preferences_answers.schema.json',
 }
 
-#: Fields that are optional in the schema (may be omitted by the user).
-OPTIONAL_FIELDS = {
-    'about_me': {
-        'preferred_name', 'ai_pain_points', 'favorite_tools', 'tools_avoid',
-        'hobbies', 'fun_fact',
-    },
-    'ai_preferences': {
-        'stack_preferences', 'no_touch_files', 'pet_peeves',
-        'past_frustrations', 'must_haves', 'never_do',
-    },
-}
-
 EXIT_OK = 0
 EXIT_ERROR = 1
 EXIT_VALIDATION = 2
-
-
-def _reconfigure_console():
-    """Best-effort UTF-8 console output on Windows (CP1252 consoles mangle
-    em-dashes and other non-ASCII characters in printed output)."""
-    if sys.platform == 'win32':
-        try:
-            import io
-            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
-        except Exception:
-            pass
 
 
 def load_json(path: Path) -> dict:
     """Load a JSON file, with helpful error on failure."""
     try:
         with open(path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            data = json.load(f)
     except FileNotFoundError:
         print(f"Error: File not found: {path}", file=sys.stderr)
         sys.exit(EXIT_ERROR)
     except json.JSONDecodeError as e:
         print(f"Error: Invalid JSON in {path}: {e}", file=sys.stderr)
         sys.exit(EXIT_ERROR)
+    if not isinstance(data, dict):
+        print(f"Error: {path} must contain a JSON object of answers, "
+              f"not {type(data).__name__}", file=sys.stderr)
+        sys.exit(EXIT_ERROR)
+    return data
 
 
 def validate_answers(template_name: str, answers: dict, verbose: bool = False):
@@ -86,48 +65,49 @@ def validate_answers(template_name: str, answers: dict, verbose: bool = False):
     schema_path = SCHEMAS.get(template_name)
     if not schema_path or not schema_path.exists():
         if verbose:
-            print(f"Warning: no schema for '{template_name}' — skipping validation")
-        return True, []
-
-    try:
-        import jsonschema
-    except ImportError:
-        print("Warning: jsonschema not installed — skipping validation", file=sys.stderr)
+            print(f"Warning: no schema for '{template_name}' — skipping validation",
+                  file=sys.stderr)
         return True, []
 
     try:
         schema = json.loads(schema_path.read_text(encoding='utf-8'))
-        jsonschema.validate(answers, schema)
-    except jsonschema.ValidationError as e:
-        # A single, readable message rather than a wall of schema internals.
-        where = '.'.join(str(p) for p in e.path) or '(root)'
-        return False, [f"Field '{where}': {e.message}"]
-
     except json.JSONDecodeError as e:
-        print(f"Error: Invalid schema JSON in {schema_path}: {e}", file=sys.stderr)
-        return True, []
+        # A broken schema is a repo bug — fail closed rather than skipping.
+        return False, [f"Invalid schema JSON in {schema_path}: {e}"]
+
+    try:
+        import jsonschema
+    except ImportError:
+        print("Warning: jsonschema not installed — skipping schema validation",
+              file=sys.stderr)
+    else:
+        try:
+            jsonschema.validate(answers, schema)
+        except jsonschema.ValidationError as e:
+            # A single, readable message rather than a wall of schema internals.
+            where = '.'.join(str(p) for p in e.path) or '(root)'
+            return False, [f"Field '{where}': {e.message}"]
 
     # Warn about unknown keys (typos) rather than failing — future fields
-    # should be forward-compatible.
+    # should be forward-compatible. Independent of jsonschema availability.
     known = set(schema.get('properties', {}).keys())
     unknown = [key for key in answers if key not in known]
     if unknown and verbose:
-        print(f"Note: unknown answer fields (possible typos): {', '.join(sorted(unknown))}")
+        print(f"Note: unknown answer fields (possible typos): "
+              f"{', '.join(sorted(unknown))}", file=sys.stderr)
 
     return True, []
 
 
 def check_missing_optional(template_name: str, answers: dict) -> list:
-    """Return a list of optional fields the user did not fill in."""
-    missing = []
-    for field in OPTIONAL_FIELDS.get(template_name, ()):
-        if not answers.get(field):
-            missing.append(field)
-    return missing
+    """Return a sorted list of optional fields the user did not fill in."""
+    return sorted(
+        field for field in OPTIONAL_FIELDS.get(template_name, ())
+        if not answers.get(field)
+    )
 
 
-def generate(template_name: str, answers: dict, output_path: Path = None,
-             verbose: bool = False):
+def generate(template_name: str, answers: dict, verbose: bool = False):
     """Generate a context file from a template and answers. Returns the result
     string; the caller decides how to present it."""
     if template_name not in TEMPLATES:
@@ -146,7 +126,8 @@ def generate(template_name: str, answers: dict, output_path: Path = None,
     if verbose:
         missing = check_missing_optional(template_name, answers)
         if missing:
-            print(f"Note: optional fields not provided: {', '.join(missing)}")
+            print(f"Note: optional fields not provided: {', '.join(missing)}",
+                  file=sys.stderr)
 
     return result
 
@@ -174,7 +155,7 @@ def write_output(path: Path, content: str, force: bool) -> bool:
 
 
 def main():
-    _reconfigure_console()
+    reconfigure_console()
 
     parser = argparse.ArgumentParser(
         description='Generate AI context files from JSON answer payloads',
@@ -186,7 +167,8 @@ def main():
             '  python scripts/generate.py all --about data/about.json \\\n'
             '      --prefs data/prefs.json --outdir out --validate --force\n'
             '\n'
-            'All subcommands accept --validate, --json, --force, --verbose.'
+            'All subcommands accept --validate, --json, --force, --verbose.\n'
+            'Diagnostics always go to stderr; rendered markdown to stdout.'
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -277,7 +259,13 @@ def main():
 
         if args.as_json:
             payload = {'file': result, 'name': f'{args.command}.md'}
-            print(json.dumps(payload, indent=2, ensure_ascii=False))
+            if args.output:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(
+                    json.dumps(payload, indent=2, ensure_ascii=False), encoding='utf-8')
+                print(f"Generated: {args.output}")
+            else:
+                print(json.dumps(payload, indent=2, ensure_ascii=False))
             sys.exit(EXIT_OK)
 
         if args.output:

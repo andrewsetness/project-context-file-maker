@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
+# scripts dir is already importable via conftest; this is for subprocess paths.
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent / 'scripts'
-sys.path.insert(0, str(SCRIPTS_DIR))
 
 from template_engine import fill_template
 
@@ -134,31 +134,32 @@ class TestSchemaValidation:
     """Test JSON answer fixtures against their schemas."""
 
     def test_about_me_fixture_valid(self, about_me_answers, project_root):
+        jsonschema = pytest.importorskip('jsonschema')
         schema_path = project_root / 'schemas' / 'about_me_answers.schema.json'
         schema = json.loads(schema_path.read_text(encoding='utf-8'))
 
-        import jsonschema
         jsonschema.validate(about_me_answers, schema)
 
     def test_ai_preferences_fixture_valid(self, ai_preferences_answers, project_root):
+        jsonschema = pytest.importorskip('jsonschema')
         schema_path = project_root / 'schemas' / 'ai_preferences_answers.schema.json'
         schema = json.loads(schema_path.read_text(encoding='utf-8'))
 
-        import jsonschema
         jsonschema.validate(ai_preferences_answers, schema)
 
     def test_minimal_about_me_fixture_valid(self, about_me_minimal, project_root):
+        jsonschema = pytest.importorskip('jsonschema')
         schema_path = project_root / 'schemas' / 'about_me_answers.schema.json'
         schema = json.loads(schema_path.read_text(encoding='utf-8'))
 
-        import jsonschema
         jsonschema.validate(about_me_minimal, schema)
 
-    def test_minimal_ai_preferences_fixture_valid(self, ai_preferences_minimal, project_root):
+    def test_minimal_ai_preferences_fixture_valid(self, ai_preferences_minimal,
+                                                  project_root):
+        jsonschema = pytest.importorskip('jsonschema')
         schema_path = project_root / 'schemas' / 'ai_preferences_answers.schema.json'
         schema = json.loads(schema_path.read_text(encoding='utf-8'))
 
-        import jsonschema
         jsonschema.validate(ai_preferences_minimal, schema)
 
 
@@ -242,6 +243,7 @@ class TestCLIInterface:
 
     def test_generate_validation_failure_exit_code(self, tmp_path):
         """Invalid answers (missing required field) should exit 2."""
+        pytest.importorskip('jsonschema')
         import subprocess
 
         bad_file = tmp_path / 'bad.json'
@@ -291,7 +293,7 @@ class TestCLIInterface:
         assert 'Andrew Setness' in output_file.read_text(encoding='utf-8')
 
     def test_generate_warns_on_unknown_fields(self, tmp_path):
-        """Typo'd answer keys should produce a verbose warning."""
+        """Typo'd answer keys should produce a verbose warning on stderr."""
         import subprocess
 
         answers_file = tmp_path / 'answers.json'
@@ -304,11 +306,116 @@ class TestCLIInterface:
             [sys.executable, str(SCRIPTS_DIR / 'generate.py'),
              'about_me', '--answers', str(answers_file),
              '--validate', '--verbose'],
-            capture_output=True, text=True
+            capture_output=True, text=True, encoding='utf-8'
         )
         assert result.returncode == 0
-        assert 'unknown answer fields' in result.stdout
-        assert 'full_naem' in result.stdout
+        assert 'unknown answer fields' in result.stderr
+        assert 'full_naem' in result.stderr
+
+    def test_verbose_notes_do_not_pollute_stdout(self, tmp_path, about_me_minimal):
+        """Verbose diagnostics must go to stderr so stdout stays clean
+        markdown even when output is redirected to a file."""
+        import subprocess
+
+        answers_file = tmp_path / 'minimal.json'
+        answers_file.write_text(json.dumps(about_me_minimal))
+
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS_DIR / 'generate.py'),
+             'about_me', '--answers', str(answers_file), '--verbose'],
+            capture_output=True, text=True, encoding='utf-8'
+        )
+        assert result.returncode == 0
+        assert 'Note: optional fields not provided' in result.stderr
+        assert 'Note:' not in result.stdout
+        assert result.stdout.startswith('# About Me')
+
+    def test_missing_optional_fields_sorted_deterministically(self, tmp_path,
+                                                              about_me_minimal):
+        """The missing-optional note should list fields in sorted order."""
+        import subprocess
+
+        answers_file = tmp_path / 'minimal.json'
+        answers_file.write_text(json.dumps(about_me_minimal))
+
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS_DIR / 'generate.py'),
+             'about_me', '--answers', str(answers_file), '--verbose'],
+            capture_output=True, text=True, encoding='utf-8'
+        )
+        line = next(l for l in result.stderr.splitlines()
+                    if l.startswith('Note: optional fields'))
+        fields = line.split('not provided: ', 1)[1].split(', ')
+        assert fields == sorted(fields)
+
+    def test_rejects_non_object_answers_json(self, tmp_path):
+        """A JSON array/string payload should fail with a clear error."""
+        import subprocess
+
+        bad_file = tmp_path / 'list.json'
+        bad_file.write_text('["not", "answers"]')
+
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS_DIR / 'generate.py'),
+             'about_me', '--answers', str(bad_file)],
+            capture_output=True, text=True, encoding='utf-8'
+        )
+        assert result.returncode != 0
+        assert 'JSON object' in result.stderr
+
+    def test_generate_json_mode_with_output_writes_payload(self, tmp_path,
+                                                           about_me_answers):
+        """--json --output writes the JSON payload to the file."""
+        import subprocess
+
+        answers_file = tmp_path / 'answers.json'
+        answers_file.write_text(json.dumps(about_me_answers))
+        output_file = tmp_path / 'payload.json'
+
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS_DIR / 'generate.py'),
+             'about_me', '--answers', str(answers_file), '--json',
+             '--output', str(output_file)],
+            capture_output=True, text=True, encoding='utf-8'
+        )
+        assert result.returncode == 0
+        payload = json.loads(output_file.read_text(encoding='utf-8'))
+        assert payload['name'] == 'about_me.md'
+        assert 'Andrew Setness' in payload['file']
+
+    def test_validate_answers_fails_closed_on_broken_schema(self, tmp_path,
+                                                            monkeypatch):
+        """A corrupt schema JSON must fail validation, not skip it."""
+        import generate
+
+        broken_schema = tmp_path / 'broken.schema.json'
+        broken_schema.write_text('{not valid json', encoding='utf-8')
+        monkeypatch.setitem(generate.SCHEMAS, 'about_me', broken_schema)
+
+        valid, msgs = generate.validate_answers('about_me', {'full_name': 'X'})
+        assert not valid
+        assert msgs and 'Invalid schema JSON' in msgs[0]
+
+    def test_validate_answers_warns_unknown_fields_without_jsonschema(
+            self, tmp_path, monkeypatch, capsys):
+        """Typo detection must work even when jsonschema is unavailable."""
+        import generate
+
+        schema = tmp_path / 'mini.schema.json'
+        schema.write_text(json.dumps({
+            'type': 'object',
+            'properties': {'full_name': {'type': 'string'}},
+        }), encoding='utf-8')
+        monkeypatch.setitem(generate.SCHEMAS, 'about_me', schema)
+        monkeypatch.setitem(sys.modules, 'jsonschema', None)  # forces ImportError
+
+        valid, msgs = generate.validate_answers(
+            'about_me', {'full_name': 'X', 'full_naem': 'typo'}, verbose=True)
+        captured = capsys.readouterr()
+        assert valid and msgs == []
+        assert 'skipping schema validation' in captured.err
+        assert 'unknown answer fields' in captured.err
+        assert 'full_naem' in captured.err
 
 
 class TestChecklistTool:

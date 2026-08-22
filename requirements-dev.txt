@@ -1,0 +1,7 @@
+# Development / test dependencies for Context File Maker.
+# Requires Python 3.9+ (uses pathlib, f-strings, re.Match typing).
+#
+#   pip install -r requirements-dev.txt
+#
+pytest>=7.0
+jsonschema>=4.0
