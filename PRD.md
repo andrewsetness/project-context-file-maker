@@ -1,7 +1,6 @@
 # PRD — Context File Maker
 
 **Version:** 1.0
-**Version:** 1.0
 **Status:** v0.2.1 implementation active
 **Last updated:** 2026-08-22
 
