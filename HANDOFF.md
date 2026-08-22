@@ -1,6 +1,6 @@
 # Context File Maker — Handoff
 
-**Last closeout:** 2026-08-22 (reconciliation rebase completed — reconcile-v021 pushed to GitHub)
+**Last closeout:** 2026-08-22 (reconciliation landed on `origin/master` @ `44f3515`, CI green; branches/worktree cleaned; CI actions bumped to node24)
 
 **Repo:** `andrewsetness/project-context-file-maker`  
 **Current state:** `STATUS.md`  
@@ -28,6 +28,13 @@ The v0.2.x ↔ origin/master reconciliation was executed and finished here:
 - **State:** 129 tests pass; `python scripts/validate.py --strict` passes
   (0 errors, 0 warnings).
 - **Blockers:** none.
+- **Follow-up housekeeping (second session, same day):** fast-forwarded `master` to the
+  reconciled line and pushed (`ffb1cf7`, then CI bump `44f3515`); deleted `reconcile-v021`
+  (local + origin) and the stale p21 worktree + `docs/p2.1-self-contained` branch; bumped
+  `actions/checkout`@v6 / `actions/setup-python`@v6 in `.github/workflows/quality.yml`
+  (node24; deprecation annotation gone, run 32591791841 green). Tracked in AIPORT-26:
+  created, made sprint-ready, executed per owner-approved Option A, closed **Done** with
+  posted evidence.
 
 ## Next session (top priorities)
 
