@@ -272,7 +272,7 @@ class TestCLIInterface:
         assert result.returncode == 0
         payload = json.loads(result.stdout)
         assert payload['name'] == 'about_me.md'
-        assert 'Andrew Setness' in payload['file']
+        assert about_me_answers['full_name'] in payload['file']
 
     def test_generate_force_overwrites(self, tmp_path, about_me_answers):
         """--force should overwrite an existing output file."""
@@ -290,7 +290,7 @@ class TestCLIInterface:
             capture_output=True, text=True
         )
         assert result.returncode == 0
-        assert 'Andrew Setness' in output_file.read_text(encoding='utf-8')
+        assert about_me_answers['full_name'] in output_file.read_text(encoding='utf-8')
 
     def test_generate_warns_on_unknown_fields(self, tmp_path):
         """Typo'd answer keys should produce a verbose warning on stderr."""
@@ -381,7 +381,7 @@ class TestCLIInterface:
         assert result.returncode == 0
         payload = json.loads(output_file.read_text(encoding='utf-8'))
         assert payload['name'] == 'about_me.md'
-        assert 'Andrew Setness' in payload['file']
+        assert about_me_answers['full_name'] in payload['file']
 
     def test_validate_answers_fails_closed_on_broken_schema(self, tmp_path,
                                                             monkeypatch):
@@ -413,7 +413,7 @@ class TestCLIInterface:
             'about_me', {'full_name': 'X', 'full_naem': 'typo'}, verbose=True)
         captured = capsys.readouterr()
         assert valid and msgs == []
-        assert 'skipping schema validation' in captured.err
+        assert 'jsonschema not installed' in captured.err
         assert 'unknown answer fields' in captured.err
         assert 'full_naem' in captured.err
 

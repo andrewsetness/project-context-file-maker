@@ -11,7 +11,7 @@ Usage:
     python scripts/generate.py about_me --answers data/about.json --output my_about.md
 
 Options:
-    --validate          Validate answers against the JSON schema before generating
+    --validate          Accepted for compatibility; schema enforcement is always on
     --json              Emit machine-readable output instead of the rendered file
     --force             Overwrite existing output files without prompting
     -v, --verbose       Print diagnostic detail (unfilled fields, warnings)
@@ -60,8 +60,28 @@ def load_json(path: Path) -> dict:
     return data
 
 
+def _contract_check(answers: dict, schema: dict) -> list:
+    """Dependency-free required/type check from the schema JSON. Guarantees
+    enforcement even when jsonschema is not installed."""
+    problems = []
+    props = schema.get('properties', {})
+    for field in schema.get('required', []):
+        if field not in answers:
+            problems.append(f"missing required field '{field}'")
+    for field, value in answers.items():
+        spec = props.get(field)
+        if isinstance(spec, dict) and spec.get('type') == 'string' \
+                and not isinstance(value, str):
+            problems.append(f"field '{field}' must be string")
+    return problems
+
+
 def validate_answers(template_name: str, answers: dict, verbose: bool = False):
-    """Validate answers against the schema. Returns (valid, messages)."""
+    """Validate answers against the schema. Returns (valid, messages).
+
+    Enforcement is unconditional (per docs/DATA-CONTRACT.md): required fields
+    and basic types are always checked; jsonschema adds full validation when
+    installed."""
     schema_path = SCHEMAS.get(template_name)
     if not schema_path or not schema_path.exists():
         if verbose:
@@ -75,11 +95,15 @@ def validate_answers(template_name: str, answers: dict, verbose: bool = False):
         # A broken schema is a repo bug — fail closed rather than skipping.
         return False, [f"Invalid schema JSON in {schema_path}: {e}"]
 
+    messages = _contract_check(answers, schema)
+    if messages:
+        return False, messages
+
     try:
         import jsonschema
     except ImportError:
-        print("Warning: jsonschema not installed — skipping schema validation",
-              file=sys.stderr)
+        print("Warning: jsonschema not installed — enforced required/type "
+              "checks only", file=sys.stderr)
     else:
         try:
             jsonschema.validate(answers, schema)
@@ -199,7 +223,8 @@ def main():
 
     for sub in (about_parser, prefs_parser, all_parser):
         sub.add_argument('--validate', action='store_true',
-                         help='Validate answers against the JSON schema first')
+                         help='Accepted for compatibility; schema enforcement '
+                              'is always on (docs/DATA-CONTRACT.md)')
         sub.add_argument('--json', action='store_true', dest='as_json',
                          help='Emit machine-readable JSON instead of the rendered file')
         sub.add_argument('--force', '-f', action='store_true',
@@ -217,14 +242,16 @@ def main():
         about_data = load_json(args.about)
         prefs_data = load_json(args.prefs)
 
-        if args.validate:
-            about_valid, about_msgs = validate_answers('about_me', about_data, args.verbose)
-            prefs_valid, prefs_msgs = validate_answers('ai_preferences', prefs_data, args.verbose)
-            problems = [(m, 'about_me') for m in about_msgs] + [(m, 'ai_preferences') for m in prefs_msgs]
-            if not (about_valid and prefs_valid):
-                for msg, which in problems:
-                    print(f"Validation error ({which}): {msg}", file=sys.stderr)
-                sys.exit(EXIT_VALIDATION)
+        # Schema enforcement is unconditional (docs/DATA-CONTRACT.md);
+        # --validate is accepted for compatibility and is a no-op.
+        about_valid, about_msgs = validate_answers('about_me', about_data, args.verbose)
+        prefs_valid, prefs_msgs = validate_answers('ai_preferences', prefs_data, args.verbose)
+        if not (about_valid and prefs_valid):
+            problems = ([(m, 'about_me') for m in about_msgs]
+                        + [(m, 'ai_preferences') for m in prefs_msgs])
+            for msg, which in problems:
+                print(f"Validation error ({which}): {msg}", file=sys.stderr)
+            sys.exit(EXIT_VALIDATION)
 
         about_out = args.outdir / 'about_me.md'
         prefs_out = args.outdir / 'ai_preferences.md'
@@ -248,12 +275,12 @@ def main():
     elif args.command in ('about_me', 'ai_preferences'):
         data = load_json(args.answers)
 
-        if args.validate:
-            valid, msgs = validate_answers(args.command, data, args.verbose)
-            if not valid:
-                for msg in msgs:
-                    print(f"Validation error: {msg}", file=sys.stderr)
-                sys.exit(EXIT_VALIDATION)
+        # Schema enforcement is unconditional (docs/DATA-CONTRACT.md).
+        valid, msgs = validate_answers(args.command, data, args.verbose)
+        if not valid:
+            for msg in msgs:
+                print(f"Validation error: {msg}", file=sys.stderr)
+            sys.exit(EXIT_VALIDATION)
 
         result = generate(args.command, data, verbose=args.verbose)
 
